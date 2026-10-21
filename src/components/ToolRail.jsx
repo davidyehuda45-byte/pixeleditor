@@ -4,13 +4,19 @@ import { Icon } from './Icon.jsx';
 import { TOOL_GROUPS } from '../ui/toolDefs.js';
 import { formatShortcut, shortcutFor } from '../ui/shortcuts.js';
 
-export function ToolRail({ viewport }) {
+export function ToolRail({ viewport, onCloseMobile, isMobileOpen }) {
   const store = useStore();
   const { t } = useI18n();
   const active = store.ui.tool;
 
   return (
-    <aside className="tool-rail" aria-label={t('menu.tools')}>
+    <aside className={`tool-rail ${isMobileOpen ? 'is-mobile-open' : ''}`} aria-label={t('menu.tools')}>
+      <div className="mobile-drawer-header">
+        <span className="mobile-drawer-title">{t('menu.tools')}</span>
+        <button type="button" className="btn btn-sm btn-ghost mobile-drawer-close" onClick={onCloseMobile} aria-label={t('common.close')}>
+          <Icon name="x" size={16} />
+        </button>
+      </div>
       <div className="tool-rail-scroll">
         {TOOL_GROUPS.map((group) => (
           <div className="tool-group" key={group.id}>
@@ -29,7 +35,10 @@ export function ToolRail({ viewport }) {
                     title={title}
                     aria-label={name}
                     aria-pressed={active === tool.id}
-                    onClick={() => store.setTool(tool.id)}
+                    onClick={() => {
+                      store.setTool(tool.id);
+                      if (onCloseMobile) onCloseMobile();
+                    }}
                   >
                     <Icon name={tool.icon} size={18} />
                   </button>

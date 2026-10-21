@@ -10,3 +10,4 @@ Fixes #(issue number)
 - [ ] Tested in browser with zero console errors.
 - [ ] Hard-pixel raster guarantees preserved (no antialiasing blur introduced).
 - [ ] New templates or tools include localization entries in `src/i18n.js` (if applicable).
+

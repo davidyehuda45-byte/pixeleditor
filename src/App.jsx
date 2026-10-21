@@ -12,6 +12,7 @@ import { ToolOptions } from './components/ToolOptions.jsx';
 import { Timeline } from './components/Timeline.jsx';
 import { RightPanel } from './components/RightPanel.jsx';
 import { StatusBar } from './components/StatusBar.jsx';
+import { MobileDock } from './components/MobileDock.jsx';
 import { CommandPalette } from './components/CommandPalette.jsx';
 import { ToastHost, ConfirmHost } from './components/Overlays.jsx';
 import { DialogHost } from './components/Dialogs.jsx';
@@ -71,6 +72,15 @@ function AppShell({ store, engine }) {
   const runRef = useRef(null);
   const [rightWidth, setRightWidth] = useState(store.ui.rightPanelWidth || 320);
   const [timelineHeight, setTimelineHeight] = useState(store.ui.timelineHeight || 224);
+  const [mobileDrawer, setMobileDrawer] = useState(null); // 'tools' | 'panel' | 'timeline' | null
+
+  useEffect(() => {
+    const onFocusColor = () => {
+      if (window.innerWidth <= 768) setMobileDrawer('panel');
+    };
+    window.addEventListener('pixelforge:focus-color', onFocusColor);
+    return () => window.removeEventListener('pixelforge:focus-color', onFocusColor);
+  }, []);
 
   const commands = useMemo(() => buildCommands({
     store,
@@ -323,7 +333,13 @@ function AppShell({ store, engine }) {
       <MenuBar commands={commands} commandMap={commandMap} runCommand={runCommand} viewport={viewportRef} />
       {!ui.zen ? <TabStrip /> : null}
       <div className="workspace">
-        {!ui.zen ? <ToolRail viewport={viewportRef} /> : null}
+        {!ui.zen ? (
+          <ToolRail
+            viewport={viewportRef}
+            onCloseMobile={() => setMobileDrawer(null)}
+            isMobileOpen={mobileDrawer === 'tools'}
+          />
+        ) : null}
         <main className="editor-column">
           <ToolOptions engine={engine} />
           <div className="canvas-area">
@@ -338,7 +354,12 @@ function AppShell({ store, engine }) {
                 onMove={(value) => setTimelineHeight(Math.max(148, Math.min(480, value)))}
                 onEnd={() => store.setUI({ timelineHeight: Math.max(148, Math.min(480, timelineHeight)) })}
               />
-              <Timeline playing={playing} onTogglePlay={togglePlay} />
+              <Timeline
+                playing={playing}
+                onTogglePlay={togglePlay}
+                onCloseMobile={() => setMobileDrawer(null)}
+                isMobileOpen={mobileDrawer === 'timeline'}
+              />
             </>
           ) : null}
         </main>
@@ -351,11 +372,29 @@ function AppShell({ store, engine }) {
               onMove={(value) => setRightWidth(Math.max(260, Math.min(520, value)))}
               onEnd={() => store.setUI({ rightPanelWidth: Math.max(260, Math.min(520, rightWidth)) })}
             />
-            <RightPanel playing={playing} onTogglePlay={togglePlay} />
+            <RightPanel
+              playing={playing}
+              onTogglePlay={togglePlay}
+              onCloseMobile={() => setMobileDrawer(null)}
+              isMobileOpen={mobileDrawer === 'panel'}
+            />
           </>
         ) : null}
       </div>
       <StatusBar />
+      <MobileDock
+        activeDrawer={mobileDrawer}
+        onToggleDrawer={(id) => setMobileDrawer((prev) => (prev === id ? null : id))}
+        runCommand={runCommand}
+        viewport={viewportRef}
+      />
+      {mobileDrawer ? (
+        <div
+          className="mobile-drawer-backdrop"
+          onClick={() => setMobileDrawer(null)}
+          aria-hidden="true"
+        />
+      ) : null}
       <DialogHost />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} runCommand={runCommand} />
       <ToastHost />

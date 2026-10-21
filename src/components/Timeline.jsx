@@ -13,7 +13,7 @@ function fpsFor(frames) {
   return Math.max(1, Math.min(60, Math.round(1000 / Math.max(10, frames[0].duration || 100))));
 }
 
-export function Timeline({ playing, onTogglePlay }) {
+export function Timeline({ playing, onTogglePlay, onCloseMobile, isMobileOpen }) {
   const store = useStore();
   const { t } = useI18n();
   const doc = store.doc;
@@ -37,7 +37,7 @@ export function Timeline({ playing, onTogglePlay }) {
   }, [session?.activeFrameId, frameWidth]);
 
   if (!doc || !session) {
-    return <section className="timeline panel-empty">{t('frames.empty')}</section>;
+    return <section className={`timeline ${isMobileOpen ? 'is-mobile-open' : ''} panel-empty`}>{t('frames.empty')}</section>;
   }
 
   const rows = buildRows(doc);
@@ -52,7 +52,14 @@ export function Timeline({ playing, onTogglePlay }) {
   const activeTag = doc.tagAt ? doc.tagAt(currentIndex) : null;
 
   return (
-    <section className="timeline" aria-label={t('menu.timeline')}>
+    <section className={`timeline ${isMobileOpen ? 'is-mobile-open' : ''}`} aria-label={t('menu.timeline')}>
+      <div className="mobile-drawer-header">
+        <div className="mobile-drawer-pill" />
+        <span className="mobile-drawer-title">{t('menu.timeline')}</span>
+        <button type="button" className="btn btn-sm btn-ghost mobile-drawer-close" onClick={onCloseMobile} aria-label={t('common.close')}>
+          <Icon name="x" size={16} />
+        </button>
+      </div>
       <div className="timeline-toolbar">
         <div className="timeline-playback">
           <IconButton icon="chevron-left" label={t('shortcut.prevFrame')} onClick={() => {

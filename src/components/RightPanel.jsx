@@ -120,7 +120,7 @@ function PreviewPanel({ playing, onTogglePlay }) {
   );
 }
 
-export function RightPanel({ playing, onTogglePlay }) {
+export function RightPanel({ playing, onTogglePlay, onCloseMobile, isMobileOpen }) {
   const store = useStore();
   const { t } = useI18n();
   const [editing, setEditing] = useState('primary');
@@ -167,7 +167,14 @@ export function RightPanel({ playing, onTogglePlay }) {
   };
 
   return (
-    <aside className="right-panel" aria-label={t('menu.rightPanel')}>
+    <aside className={`right-panel ${isMobileOpen ? 'is-mobile-open' : ''}`} aria-label={t('menu.rightPanel')}>
+      <div className="mobile-drawer-header">
+        <div className="mobile-drawer-pill" />
+        <span className="mobile-drawer-title">{t('menu.rightPanel')}</span>
+        <button type="button" className="btn btn-sm btn-ghost mobile-drawer-close" onClick={onCloseMobile} aria-label={t('common.close')}>
+          <Icon name="x" size={16} />
+        </button>
+      </div>
       {doc ? (
         <div className="doc-info-strip">
           <button type="button" className="doc-title-button" onClick={() => store.setDialog({ type: 'renameDocument' })} title={t('common.rename')}>

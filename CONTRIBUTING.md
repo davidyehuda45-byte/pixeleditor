@@ -56,3 +56,4 @@ When adding or editing a template:
 2. **Follow existing code conventions**: Standard ES modules, 2-space indentation, clear variable naming.
 3. **Verify tests pass**: Run `npm test` and `npm run build` locally before pushing.
 4. **Keep PRs focused**: One feature or bug fix per pull request.
+
