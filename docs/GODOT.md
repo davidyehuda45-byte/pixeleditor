@@ -58,3 +58,4 @@ PixelForge menyediakan opsi ekspor format **Godot** (`.tres` SpriteFrames) secar
 Saat kamera pixel art bergerak atau melakukan zoom, sub-pixel rendering dapat menyebabkan tepi tile lain di atlas ikut terlihat (bleeding).
 * Di PixelForge, centang opsi **Extrude (1-2 px)** saat mengekspor sprite sheet.
 * Fitur Extrude akan menduplikasi 1 piksel garis tepi ke luar batas frame sehingga tidak ada warna latar/tile lain yang bocor saat interpolasi kamera.
+

@@ -133,6 +133,17 @@ export function SettingsDialog({ onClose }) {
                 />
               </DialogSection>
               <FormGrid>
+                <Field label={t('settings.uiScale')} hint={t('settings.uiScale.large')}>
+                  <Select
+                    value={draft.uiScale || 'normal'}
+                    onChange={(value) => set({ uiScale: value })}
+                    options={[
+                      { value: 'normal', label: t('settings.uiScale.normal') },
+                      { value: 'large', label: t('settings.uiScale.large') },
+                      { value: 'xlarge', label: t('settings.uiScale.xlarge') },
+                    ]}
+                  />
+                </Field>
                 <Field label={t('dialog.settings.language')} hint={t('dialog.settings.languageHint')}>
                   <Select
                     value={draft.language}

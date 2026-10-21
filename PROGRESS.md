@@ -26,3 +26,4 @@ Dokumen pelacak status implementasi setiap milestone (M1–M9) dan catatan keput
 3. **Format Proyek**: `.pfx` v1 berbasis JSON UTF-8 dengan data piksel RGBA terkompresi RLE 32-bit + Base64.
 4. **Ekspor Game Dev**: Menyediakan resource asli Godot 4 `.tres` SpriteFrames, slice metadata Unity, dan kompatibilitas Aseprite / TexturePacker JSON.
 5. **Headless CLI**: Modul core dan I/O dapat dijalankan langsung di Node.js via `node tools/cli.js`.
+

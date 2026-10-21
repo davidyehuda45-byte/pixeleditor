@@ -33,3 +33,4 @@ node tools/cli.js export examples/knight.pfx --godot --out build/
 - Tested in Chrome/Edge DevTools via CDP: 0 runtime errors, 60fps viewport, clean modal hosts.
 - Service Worker & PWA manifest configured for full offline capability.
 - Default language: Bahasa Indonesia (English selectable in settings).
+

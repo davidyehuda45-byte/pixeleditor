@@ -30,3 +30,4 @@ PixelForge secara otomatis mengekspor `<nama>_unity.json` bersamaan dengan sprit
   * Buka **Sprite Editor** di Inspector tekstur.
   * Masukkan pivot dan ukuran slice sesuai metadata.
   * Untuk 9-slice UI, atur border L/B/R/T sesuai nilai pada `_unity.json`.
+

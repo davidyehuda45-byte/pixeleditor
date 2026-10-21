@@ -61,3 +61,4 @@ Dokumen ini berisi daftar verifikasi pengujian manual pada PixelForge di lingkun
   - Autosave berkala ke IndexedDB dan dialog pemulihan crash saat reload halaman.
 - [x] **PWA**: PWA manifest valid dan Service Worker terdaftar untuk mode offline.
 - [x] **CLI Headless**: Ekspor via `node tools/cli.js export <file.pfx> --sheet --godot` berjalan tanpa DOM.
+

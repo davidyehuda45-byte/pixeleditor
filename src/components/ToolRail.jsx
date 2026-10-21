@@ -18,14 +18,16 @@ export function ToolRail({ viewport }) {
             <div className="tool-grid">
               {group.tools.map((tool) => {
                 const combo = formatShortcut(shortcutFor(store, `tool.${tool.id}`));
-                const label = `${t(tool.labelKey)}${combo && combo !== '—' ? ` (${combo})` : ''}`;
+                const name = t(tool.labelKey);
+                const desc = t(`tool.${tool.id}.desc`);
+                const title = `${name}${combo && combo !== '—' ? ` (${combo})` : ''}${desc ? `\n— ${desc}` : ''}`;
                 return (
                   <button
                     type="button"
                     key={tool.id}
                     className={`tool-btn ${active === tool.id ? 'is-active' : ''}`}
-                    title={label}
-                    aria-label={t(tool.labelKey)}
+                    title={title}
+                    aria-label={name}
                     aria-pressed={active === tool.id}
                     onClick={() => store.setTool(tool.id)}
                   >

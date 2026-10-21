@@ -47,13 +47,19 @@ export function StatusBar() {
   return (
     <footer className="statusbar" aria-label="Status">
       <div className="status-left">
-        <span className="status-tool" title={`${t('status.tool')} (${toolCombo})`}>
-          <Icon name="pencil" size={12} />
+        <button
+          type="button"
+          className="status-tool"
+          onClick={() => store.setDialog({ type: 'guide' })}
+          title={`${t('status.tool')} (${toolCombo}) — ${t('guide.title')}`}
+          style={{ background: 'transparent', border: 0, padding: 0, cursor: 'pointer' }}
+        >
+          <Icon name="pencil" size={13} />
           {t(`tool.${store.ui.tool}`)}
           {toolCombo !== '—' ? <kbd>{toolCombo}</kbd> : null}
-        </span>
-        <span className="status-hint" title={hint || t('status.toolHint')}>
-          {hint || (store.ui.language === 'en' ? 'Wheel zooms · Space/right-drag pans · right click picks secondary' : 'Scroll zoom · Spasi/klik kanan-seret geser · klik kanan warna sekunder')}
+        </button>
+        <span className="status-hint" title={hint || t(`hint.tool.${store.ui.tool}`) || t('status.toolHint')}>
+          {hint || t(`hint.tool.${store.ui.tool}`) || (store.ui.language === 'en' ? 'Wheel zooms · Space/right-drag pans · right click picks secondary' : 'Scroll zoom · Spasi/klik kanan-seret geser · klik kanan warna sekunder')}
         </span>
       </div>
       <div className="status-right">

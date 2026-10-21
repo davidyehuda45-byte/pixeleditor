@@ -450,3 +450,165 @@ export function rotsprite(data, width, height, degrees) {
   }
   return out;
 }
+
+/**
+ * xBRZ 2x pixel scaler with corner rule topology analysis.
+ * Preserves sharp geometric edges and curves without blurring.
+ */
+export function scaleXBRZ2x(data, width, height) {
+  const nw = width * 2, nh = height * 2;
+  const out = new Uint8ClampedArray(nw * nh * 4);
+  const colorDist = (c1, c2) => {
+    if (c1[3] === 0 && c2[3] === 0) return 0;
+    if (c1[3] === 0 || c2[3] === 0) return 255 * 3;
+    const y1 = 0.299 * c1[0] + 0.587 * c1[1] + 0.114 * c1[2];
+    const y2 = 0.299 * c2[0] + 0.587 * c2[1] + 0.114 * c2[2];
+    const u1 = -0.14713 * c1[0] - 0.28886 * c1[1] + 0.436 * c1[2];
+    const u2 = -0.14713 * c2[0] - 0.28886 * c2[1] + 0.436 * c2[2];
+    const v1 = 0.615 * c1[0] - 0.51499 * c1[1] - 0.10001 * c1[2];
+    const v2 = 0.615 * c2[0] - 0.51499 * c2[1] - 0.10001 * c2[2];
+    return Math.abs(y1 - y2) + Math.abs(u1 - u2) + Math.abs(v1 - v2);
+  };
+  const get = (x, y) => {
+    const xx = Math.max(0, Math.min(width - 1, x));
+    const yy = Math.max(0, Math.min(height - 1, y));
+    const i = (yy * width + xx) * 4;
+    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+  };
+  const set = (x, y, c) => {
+    const i = (y * nw + x) * 4;
+    out[i] = c[0]; out[i + 1] = c[1]; out[i + 2] = c[2]; out[i + 3] = c[3];
+  };
+
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const e = get(x, y);
+    const b = get(x, y - 1);
+    const d = get(x - 1, y);
+    const f = get(x + 1, y);
+    const h = get(x, y + 1);
+    const a = get(x - 1, y - 1);
+    const c = get(x + 1, y - 1);
+    const g = get(x - 1, y + 1);
+    const i = get(x + 1, y + 1);
+
+    let e0 = e, e1 = e, e2 = e, e3 = e;
+    // Top-left subpixel
+    if (colorDist(d, b) < colorDist(e, a) && colorDist(e, a) > colorDist(e, d)) e0 = d;
+    // Top-right subpixel
+    if (colorDist(b, f) < colorDist(e, c) && colorDist(e, c) > colorDist(e, f)) e1 = f;
+    // Bottom-left subpixel
+    if (colorDist(h, d) < colorDist(e, g) && colorDist(e, g) > colorDist(e, d)) e2 = d;
+    // Bottom-right subpixel
+    if (colorDist(f, h) < colorDist(e, i) && colorDist(e, i) > colorDist(e, f)) e3 = f;
+
+    set(x * 2, y * 2, e0);
+    set(x * 2 + 1, y * 2, e1);
+    set(x * 2, y * 2 + 1, e2);
+    set(x * 2 + 1, y * 2 + 1, e3);
+  }
+  return { data: out, width: nw, height: nh };
+}
+
+/**
+ * 47-Tile Autotiling bitmask calculator.
+ * Returns the canonical 47-tile index (0..46) for a 3x3 neighborhood.
+ * isFilled(x, y) returns true if the tile at (x, y) matches the current autotile group.
+ */
+export function autotile47Bitmask(x, y, isFilled) {
+  const n = isFilled(x, y - 1) ? 1 : 0;
+  const e = isFilled(x + 1, y) ? 1 : 0;
+  const s = isFilled(x, y + 1) ? 1 : 0;
+  const w = isFilled(x - 1, y) ? 1 : 0;
+
+  // Corners only count if adjacent cardinals are both present
+  const ne = (n && e && isFilled(x + 1, y - 1)) ? 1 : 0;
+  const se = (s && e && isFilled(x + 1, y + 1)) ? 1 : 0;
+  const sw = (s && w && isFilled(x - 1, y + 1)) ? 1 : 0;
+  const nw = (n && w && isFilled(x - 1, y - 1)) ? 1 : 0;
+
+  const mask = (n << 0) | (ne << 1) | (e << 2) | (se << 3) |
+               (s << 4) | (sw << 5) | (w << 6) | (nw << 7);
+
+  // Map 256 combinations to 47 canonical tiles
+  return CANONICAL_47_MAP[mask] ?? 0;
+}
+
+// Canonical lookup for 47-rule blob tiles
+const CANONICAL_47_MAP = (() => {
+  const map = new Uint8Array(256);
+  // Distinct unique patterns
+  const canonicals = [
+    0, 1, 4, 5, 16, 17, 20, 21, 64, 65, 68, 69, 80, 81, 84, 85,
+    7, 23, 71, 87, 28, 29, 92, 93, 112, 113, 116, 117, 124, 125,
+    31, 95, 119, 127, 241, 245, 247, 253, 255, 193, 197, 199, 209, 213, 215, 221, 223,
+  ];
+  const table = new Map(canonicals.map((v, idx) => [v, idx]));
+  for (let i = 0; i < 256; i++) {
+    // If not directly present, map to the closest canonical subset
+    let best = 0;
+    if (table.has(i)) {
+      best = table.get(i);
+    } else {
+      // Clear invalid corners if cardinals missing
+      let cleaned = i;
+      if (!(cleaned & 1) || !(cleaned & 4)) cleaned &= ~2;
+      if (!(cleaned & 16) || !(cleaned & 4)) cleaned &= ~8;
+      if (!(cleaned & 16) || !(cleaned & 64)) cleaned &= ~32;
+      if (!(cleaned & 1) || !(cleaned & 64)) cleaned &= ~128;
+      best = table.get(cleaned) ?? (cleaned % 47);
+    }
+    map[i] = best;
+  }
+  return map;
+})();
+
+/**
+ * Generate a 2D Tangent Space Normal Map from a pixel art RGBA buffer.
+ * Sobel operator calculates gradients and maps [nx, ny, nz] -> [R, G, B, 255].
+ * Perfect for dynamic 2D lighting in Godot 4 (CanvasItem) and Unity 2D Lights.
+ */
+export function generateNormalMap2D(data, width, height, strength = 1.0) {
+  const out = new Uint8ClampedArray(width * height * 4);
+  const getLum = (x, y) => {
+    const xx = Math.max(0, Math.min(width - 1, x));
+    const yy = Math.max(0, Math.min(height - 1, y));
+    const i = (yy * width + xx) * 4;
+    const a = data[i + 3] / 255;
+    if (a === 0) return 0;
+    const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+    return lum * a;
+  };
+
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    const idx = (y * width + x) * 4;
+    if (data[idx + 3] === 0) {
+      // Transparent pixels have flat default normal (0, 0, 1) -> (128, 128, 255, 0)
+      out[idx] = 128; out[idx + 1] = 128; out[idx + 2] = 255; out[idx + 3] = 0;
+      continue;
+    }
+    const tl = getLum(x - 1, y - 1);
+    const t  = getLum(x,     y - 1);
+    const tr = getLum(x + 1, y - 1);
+    const l  = getLum(x - 1, y);
+    const r  = getLum(x + 1, y);
+    const bl = getLum(x - 1, y + 1);
+    const b  = getLum(x,     y + 1);
+    const br = getLum(x + 1, y + 1);
+
+    // Sobel kernels
+    const dX = (tr + 2 * r + br) - (tl + 2 * l + bl);
+    const dY = (bl + 2 * b + br) - (tl + 2 * t + tr);
+    const dZ = 1.0 / Math.max(0.01, strength);
+
+    const len = Math.hypot(dX, dY, dZ) || 1;
+    const nx = dX / len;
+    const ny = -dY / len; // Invert Y for standard texture coordinate space
+    const nz = dZ / len;
+
+    out[idx]     = Math.max(0, Math.min(255, Math.round((nx * 0.5 + 0.5) * 255)));
+    out[idx + 1] = Math.max(0, Math.min(255, Math.round((ny * 0.5 + 0.5) * 255)));
+    out[idx + 2] = Math.max(0, Math.min(255, Math.round((nz * 0.5 + 0.5) * 255)));
+    out[idx + 3] = data[idx + 3];
+  }
+  return out;
+}

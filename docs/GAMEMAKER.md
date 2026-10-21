@@ -27,3 +27,4 @@ GameMaker bekerja optimal dengan **Horizontal Strip** (deretan frame dari kiri k
 5. Di bagian **Texture Settings / Global Game Settings**:
    * Pastikan **Interpolate colors between pixels** dalam keadaan **OFF** / tidak dicentang agar piksel tidak blur.
 6. Atur **Origin** sprite (misalnya `Middle Centre` atau `Bottom Centre`) sesuai pivot karakter Anda.
+

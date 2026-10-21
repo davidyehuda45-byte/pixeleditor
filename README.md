@@ -138,3 +138,4 @@ node tools/cli.js export examples/knight.pfx --png --scale 2 --out output/
 1. **Format GIF Import**: Parser GIF eksperimental saat ini memfokuskan ekstraksi frame utuh dan mengabaikan mode disposal non-standar. Disarankan mengimpor urutan PNG atau sprite sheet untuk animasi kompleks.
 2. **Kustom Font Bitmap**: Alat teks menyertakan 3 font bawaan (5x7, 8x8 bold, dan serif kecil). Penggunaan font kustom saat ini memerlukan lembar PNG bitmap font.
 3. **Penyimpanan Lokal**: Autosave bergantung pada IndexedDB lokal browser. Menghapus data penjelajahan (Clear Browsing Data) dapat menghapus cache autosave lokal. Selalu simpan cadangan file `.pfx` di penyimpanan berkas komputer Anda.
+

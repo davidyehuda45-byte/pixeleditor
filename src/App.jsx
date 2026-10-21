@@ -126,7 +126,8 @@ function AppShell({ store, engine }) {
   useEffect(() => {
     document.documentElement.dataset.theme = store.ui.theme || 'dark';
     document.documentElement.lang = store.ui.language || 'id';
-  }, [store.ui.theme, store.ui.language]);
+    document.documentElement.setAttribute('data-ui-scale', store.ui.uiScale || 'normal');
+  }, [store.ui.theme, store.ui.language, store.ui.uiScale]);
 
   useEffect(() => {
     const title = store.doc?.title || 'PixelForge';

@@ -40,6 +40,7 @@ export const DEFAULT_UI = {
   checkerColorA: '#20222c',
   checkerColorB: '#2a2d3a',
   theme: 'dark',
+  uiScale: 'normal',
   language: 'id',
   showPreview: true,
   previewBg: 'checker',
@@ -77,7 +78,7 @@ export const DEFAULT_UI = {
 
 const PERSIST_KEYS = [
   'primary', 'secondary', 'brushSize', 'brushShape', 'symmetry', 'symmetrySlices',
-  'tiled', 'pixelPerfect', 'lockAlpha', 'dither', 'showGrid', 'theme', 'language',
+  'tiled', 'pixelPerfect', 'lockAlpha', 'dither', 'showGrid', 'theme', 'uiScale', 'language',
   'showPreview', 'previewBg', 'previewScale', 'autoSave', 'autoSaveInterval',
   'gridOverlayColor', 'checkerSize', 'checkerColorA', 'checkerColorB',
   'exportScale', 'exportPadding', 'exportExtrude', 'exportLayout', 'exportJsonVariant',

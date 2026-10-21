@@ -183,6 +183,16 @@ export function MenuBar({ commands, commandMap, runCommand, viewport }) {
         ))}
       </nav>
       <div className="menubar-tail">
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost guide-btn"
+          onClick={() => store.setDialog({ type: 'guide' })}
+          title={t('guide.title')}
+          style={{ gap: 5, fontWeight: 600, color: 'var(--accent-soft)', background: 'var(--accent-dim)', border: '1px solid var(--accent-line)', height: 26, padding: '0 8px', borderRadius: 4 }}
+        >
+          <Icon name="sparkles" size={13} />
+          <span>{t('guide.title')}</span>
+        </button>
         <div className="quick-group">
           <IconButton icon="undo" label={t('menu.undo')} onClick={() => runCommand('edit.undo')} disabled={!store.history?.canUndo} />
           <IconButton icon="redo" label={t('menu.redo')} onClick={() => runCommand('edit.redo')} disabled={!store.history?.canRedo} />

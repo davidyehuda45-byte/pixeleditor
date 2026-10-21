@@ -131,3 +131,4 @@ PixelForge menambahkan objek metadata tanpa merusak skema standar:
 - `anchors`: Titik koordinat per-frame untuk lampiran senjata, partikel, atau dialog baloon.
 - `hitboxes`: Area poligon atau lingkaran opsional untuk collision box.
 - `userData`: String atau JSON bebas pada level dokumen, layer, frame, atau slice.
+

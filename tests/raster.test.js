@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { linePoints, ellipseMask, floodFillMask, growMask, changedBounds, scaleNearest, flipPixels, rotatePixels, symmetryPoints, ditherThreshold, trimBounds } from '../src/utils/raster.js';
+import { linePoints, ellipseMask, floodFillMask, growMask, changedBounds, scaleNearest, flipPixels, rotatePixels, symmetryPoints, ditherThreshold, trimBounds, scaleXBRZ2x, autotile47Bitmask, generateNormalMap2D } from '../src/utils/raster.js';
 
 function rgba(w, h, color = [0, 0, 0, 0]) {
   const data = new Uint8ClampedArray(w * h * 4);
@@ -117,6 +117,54 @@ export const rasterTests = [
           assert.equal(a, ditherThreshold(pattern, i + 8, i * 3 + 8));
         }
       }
+    },
+  },
+  {
+    name: 'scaleXBRZ2x scales 2x while analyzing diagonal corner rules',
+    fn() {
+      const w = 4, h = 4;
+      const data = rgba(w, h, [0, 0, 0, 255]);
+      // Draw diagonal line across 4x4
+      for (let i = 0; i < 4; i++) data.set([255, 255, 255, 255], (i * 4 + i) * 4);
+      const res = scaleXBRZ2x(data, w, h);
+      assert.equal(res.width, 8);
+      assert.equal(res.height, 8);
+      assert.equal(res.data.length, 8 * 8 * 4);
+      // Main diagonal subpixels must stay white
+      for (let i = 0; i < 8; i++) {
+        const idx = (i * 8 + i) * 4;
+        assert.equal(res.data[idx], 255);
+        assert.equal(res.data[idx + 3], 255);
+      }
+    },
+  },
+  {
+    name: 'autotile47Bitmask maps 3x3 neighbor connectivity to canonical tile indices',
+    fn() {
+      // Completely isolated tile (no neighbors)
+      const isolated = autotile47Bitmask(5, 5, () => false);
+      assert.equal(typeof isolated, 'number');
+      assert.ok(isolated >= 0 && isolated < 47);
+
+      // Fully enclosed tile (all neighbors present)
+      const full = autotile47Bitmask(5, 5, () => true);
+      assert.equal(typeof full, 'number');
+      assert.ok(full >= 0 && full < 47);
+      assert.notEqual(isolated, full, 'Isolated tile and completely surrounded tile must have different autotile indices');
+    },
+  },
+  {
+    name: 'generateNormalMap2D calculates valid tangent space normals',
+    fn() {
+      const w = 4, h = 4;
+      const data = rgba(w, h, [128, 128, 128, 255]);
+      // Raised center pixel
+      data.set([255, 255, 255, 255], (1 * 4 + 1) * 4);
+      const normalMap = generateNormalMap2D(data, w, h, 1.0);
+      assert.equal(normalMap.length, w * h * 4);
+      // Flat corners should be close to flat normal (128, 128, 255)
+      const flatZ = normalMap[(3 * 4 + 3) * 4 + 2];
+      assert.ok(flatZ > 200, 'Z channel on flat surfaces should point straight out (blueish)');
     },
   },
 ];

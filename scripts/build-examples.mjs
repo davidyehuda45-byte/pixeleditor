@@ -136,3 +136,4 @@ for (const c of BUILTIN_PALETTES['Endesga 32']) {
 }
 fs.writeFileSync(path.join(outDir, 'endesga32.pal'), jasc.join('\n'));
 console.log('✓ Generated examples/endesga32.pal');
+

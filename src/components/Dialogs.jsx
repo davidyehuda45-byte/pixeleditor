@@ -4,6 +4,7 @@ import {
   NewDialog, OpenDialog, RecoveryDialog, ExportDialog, WelcomeDialog, AboutDialog,
   UnsavedDialog, ImportDialog,
 } from './dialogs/FileDialogs.jsx';
+import { QuickGuideDialog } from './dialogs/QuickGuideDialog.jsx';
 import { SettingsDialog, ShortcutsDialog } from './dialogs/SettingsDialogs.jsx';
 import {
   RenameDialog, FrameDurationDialog, FpsDialog, TagsDialog, ResizeDialog, EffectsDialog,
@@ -30,6 +31,8 @@ export function DialogHost() {
       return <ExportDialog onClose={close} />;
     case 'welcome':
       return <WelcomeDialog onClose={close} />;
+    case 'guide':
+      return <QuickGuideDialog onClose={close} />;
     case 'about':
       return <AboutDialog onClose={close} />;
     case 'unsaved':
