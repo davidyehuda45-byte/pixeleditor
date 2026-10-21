@@ -94,3 +94,4 @@ export const GAME_TEMPLATES = [
   { id: 'ui-hearts', cat: 'ui', titleKey: 'template.uiHearts.title', descKey: 'template.uiHearts.desc', w: 48, h: 16, frames: 3 },
   { id: 'ui-xp-gauge', cat: 'ui', titleKey: 'template.uiXpGauge.title', descKey: 'template.uiXpGauge.desc', w: 64, h: 16, frames: 2 },
 ];
+

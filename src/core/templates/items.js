@@ -263,3 +263,4 @@ function buildArmorIcons(doc, layerBase, layerDetail) {
     }
   }
 }
+

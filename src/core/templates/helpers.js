@@ -46,3 +46,4 @@ export function drawMatrix(cel, doc, startX, startY, rows, paletteMap) {
     }
   }
 }
+

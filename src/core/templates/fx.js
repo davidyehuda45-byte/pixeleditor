@@ -184,3 +184,4 @@ function buildIceBlast(doc, layerCore, layerGlow) {
     pixel(cG, doc, cx + spread - 1, cy + spread - 1, '#73eff7');
   }
 }
+

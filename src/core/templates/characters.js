@@ -1024,3 +1024,4 @@ export function buildMannequinCharacter(doc, layerBody, layerArmor, layerFx) {
     fillRect(cF, doc, 12, 28, 8, 3, '#1a1c2c');
   }
 }
+

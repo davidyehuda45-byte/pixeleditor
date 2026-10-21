@@ -263,3 +263,4 @@ function buildWands(doc, layerWeapon, layerGlow) {
     pixel(celGlow, doc, 18, 14, '#ffffff');
   }
 }
+

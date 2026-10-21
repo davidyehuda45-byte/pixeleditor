@@ -378,3 +378,4 @@ function buildMineEntrance(doc, layerWall, layerRoof, layerDetails) {
   pixel(cD, doc, 13, 20, '#fee761');
   pixel(cD, doc, 13, 21, '#ffffff');
 }
+

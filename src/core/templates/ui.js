@@ -187,3 +187,4 @@ function buildXpGauge(doc, layerBg, layerContent) {
     outlineRect(c1, doc, 29, 2, 6, 12, '#181425');
   }
 }
+

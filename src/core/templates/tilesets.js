@@ -260,3 +260,4 @@ function buildGraveyardTiles(doc, layerFloor, layerWalls, layerProps) {
   pixel(cP, doc, 24, 23, '#181425');
   pixel(cP, doc, 24, 24, '#181425');
 }
+
