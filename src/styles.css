@@ -212,6 +212,25 @@ code { font-family: var(--font-mono); font-size: 11px; }
   overflow: hidden;
   background: var(--canvas-bg);
 }
+.zen-mode-pill {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  background: rgba(18, 19, 26, 0.95);
+  border: 1px solid var(--accent-line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  backdrop-filter: blur(8px);
+}
 .toolbar-spacer { flex: 1 1 auto; }
 .modal-footer-spacer { flex: 1 1 auto; }
 

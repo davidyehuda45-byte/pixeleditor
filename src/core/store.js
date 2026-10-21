@@ -86,7 +86,7 @@ const PERSIST_KEYS = [
   'fillMode', 'gradientType', 'gradientSnapPalette', 'curveType', 'sprayDensity',
   'textAlign', 'selectWandContiguous', 'selectWandConnectivity', 'pressureSize',
   'rightPanelWidth', 'timelineHeight', 'showColorPanel', 'showPalettePanel',
-  'showLayersPanel', 'snapToGrid', 'snapToGuides', 'zen',
+  'showLayersPanel', 'snapToGrid', 'snapToGuides',
 ];
 
 export class AppStore {
@@ -312,6 +312,7 @@ export class AppStore {
       if (data.ui) {
         for (const key of PERSIST_KEYS) if (key in data.ui) this.ui[key] = data.ui[key];
       }
+      this.ui.zen = false;
       if (data.shortcuts && typeof data.shortcuts === 'object') this.shortcuts = data.shortcuts;
     } catch {
       // Corrupt preferences are ignored, never fatal.

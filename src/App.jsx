@@ -345,6 +345,18 @@ function AppShell({ store, engine }) {
         <main className="editor-column">
           <ToolOptions engine={engine} />
           <div className="canvas-area">
+            {ui.zen ? (
+              <div className="zen-mode-pill">
+                <span>Mode Zen Aktif</span>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-primary"
+                  onClick={() => store.setUI({ zen: false, showRightPanel: true, showTimeline: true })}
+                >
+                  Tampilkan Semua Menu (Esc)
+                </button>
+              </div>
+            ) : null}
             <CanvasViewport engine={engine} apiRef={viewportRef} />
           </div>
           {ui.showTimeline && !ui.zen ? (

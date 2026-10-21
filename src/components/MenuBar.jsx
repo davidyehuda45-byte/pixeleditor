@@ -216,6 +216,8 @@ export function MenuBar({ commands, commandMap, runCommand, viewport }) {
           <div className="quick-group">
             <IconButton icon="grid" label={t('menu.grid')} active={store.ui.showGrid} onClick={() => runCommand('view.grid')} />
             <IconButton icon="layers" label={t('menu.onion')} active={store.ui.showOnion} onClick={() => runCommand('view.onion')} />
+            <IconButton icon="film" label={t('menu.timeline')} active={store.ui.showTimeline && !store.ui.zen} onClick={() => { if (store.ui.zen) store.setUI({ zen: false, showTimeline: true }); else store.setUI({ showTimeline: !store.ui.showTimeline }); }} />
+            <IconButton icon="panel-right" label={t('menu.rightPanel')} active={store.ui.showRightPanel && !store.ui.zen} onClick={() => { if (store.ui.zen) store.setUI({ zen: false, showRightPanel: true }); else store.setUI({ showRightPanel: !store.ui.showRightPanel }); }} />
           </div>
           <button type="button" className="zoom-chip" title={t('menu.fit')} onClick={() => viewport.current?.fit?.()}>
             {Math.round(zoom * 100)}%
