@@ -110,6 +110,20 @@ function outlineRect(cel, doc, x, y, w, h, color) {
   fillRect(cel, doc, x + w - 1, y, 1, h, color);
 }
 
+function drawMatrix(cel, doc, startX, startY, rows, paletteMap) {
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === ' ' || ch === '.') continue;
+      const color = paletteMap[ch];
+      if (color) {
+        pixel(cel, doc, startX + c, startY + r, color);
+      }
+    }
+  }
+}
+
 /**
  * Procedural Document Builder.
  * Returns a fully live PixelDocument configured with multiple layers for easy editing.
@@ -153,95 +167,704 @@ function buildCharacterTemplate(doc, id) {
   const layerArmor = doc.addLayer({ name: 'Pakaian & Armor (Clothes)' });
   const layerFx = doc.addLayer({ name: 'Senjata & FX (Weapon)' });
 
-  const outline = '#1a1c2c', skin = '#ffcd75', skinDark = '#ef7d57';
-  const cloth = id === 'char-mage' ? '#733e39' : id === 'char-rogue' ? '#262b44' : '#41a6f6';
-  const clothDark = id === 'char-mage' ? '#3e2731' : id === 'char-rogue' ? '#181425' : '#3b5dc9';
-  const accent = id === 'char-knight' ? '#94b0c2' : id === 'char-archer' ? '#73ced7' : '#ffec27';
-
   if (id === 'char-slime') {
-    doc.tags = [{ name: 'bounce', from: 0, to: 3, direction: 'pingpong', repeat: 0, color: '#a7f070' }];
-    for (let f = 0; f < 4; f++) {
-      const cel = doc.ensureCel(layerBody.id, doc.frames[f].id);
-      const squash = [0, 1, 0, -2][f];
-      // Slime body
-      fillRect(cel, doc, 3 - squash, 8 + squash, 10 + squash * 2, 7 - squash, '#a7f070');
-      fillRect(cel, doc, 4 - squash, 7 + squash, 8 + squash * 2, 1, '#a7f070');
-      // Highlight & eyes
-      pixel(cel, doc, 5 - squash, 9 + squash, '#ffffff');
-      pixel(cel, doc, 9 + squash, 9 + squash, '#ffffff');
-      pixel(cel, doc, 6 - squash, 9 + squash, '#3b5dc9');
-      pixel(cel, doc, 10 + squash, 9 + squash, '#3b5dc9');
-    }
+    buildSlimeCharacter(doc, layerBody);
     return;
   }
-
   if (id === 'char-bat') {
-    doc.tags = [{ name: 'fly', from: 0, to: 3, direction: 'forward', repeat: 0, color: '#b13e53' }];
-    for (let f = 0; f < 4; f++) {
-      const cel = doc.ensureCel(layerBody.id, doc.frames[f].id);
-      const wingY = [0, -2, 0, 2][f];
-      // Bat head & ears
-      fillRect(cel, doc, 6, 6, 4, 4, '#5d275d');
-      pixel(cel, doc, 6, 4, '#b13e53');
-      pixel(cel, doc, 9, 4, '#b13e53');
-      pixel(cel, doc, 7, 7, '#ffec27');
-      pixel(cel, doc, 8, 7, '#ffec27');
-      // Wings
-      fillRect(cel, doc, 2, 5 + wingY, 4, 3, '#3e2731');
-      fillRect(cel, doc, 10, 5 + wingY, 4, 3, '#3e2731');
-    }
+    buildBatCharacter(doc, layerBody);
     return;
   }
 
-  // Humanoid / Platformer animations (Knight, Mage, Archer, Rogue, Skeleton, Mannequin)
+  // Humanoids (Knight, Mage, Archer, Rogue, Skeleton, Mannequin)
   doc.tags = [
     { name: 'walk', from: 0, to: 3, direction: 'forward', repeat: 0, color: '#41a6f6' },
   ];
   doc.slices = [
-    { name: 'hitbox', frames: doc.frames.map((_, i) => ({ frame: i, rect: [10, 10, 12, 20], pivot: [16, 30] })) },
+    { name: 'hitbox', frames: doc.frames.map((_, i) => ({ frame: i, rect: [10, 8, 12, 22], pivot: [16, 28] })) },
   ];
-  doc.anchors = doc.frames.map((_, i) => ({ name: 'weapon_hand', frame: i, x: 21, y: 20 + (i % 2) }));
+  doc.anchors = doc.frames.map((_, i) => ({ name: 'weapon_hand', frame: i, x: 23, y: 18 + (i % 2) }));
+
+  if (id === 'char-knight') buildKnightCharacter(doc, layerBody, layerArmor, layerFx);
+  else if (id === 'char-mage') buildMageCharacter(doc, layerBody, layerArmor, layerFx);
+  else if (id === 'char-archer') buildArcherCharacter(doc, layerBody, layerArmor, layerFx);
+  else if (id === 'char-rogue') buildRogueCharacter(doc, layerBody, layerArmor, layerFx);
+  else if (id === 'char-skeleton') buildSkeletonCharacter(doc, layerBody, layerArmor, layerFx);
+  else if (id === 'char-mannequin') buildMannequinCharacter(doc, layerBody, layerArmor, layerFx);
+  else buildKnightCharacter(doc, layerBody, layerArmor, layerFx);
+}
+
+// 1.1 Ksatria (Knight)
+function buildKnightCharacter(doc, layerBody, layerArmor, layerFx) {
+  const K_PAL = {
+    '#': '#1a1c2c',
+    'S': '#8b9bb4',
+    'L': '#c0cbdc',
+    'W': '#ffffff',
+    'D': '#566c86',
+    'G': '#e4a672',
+    'Y': '#fee761',
+    'R': '#b13e53',
+    'r': '#ef7d57',
+    'B': '#3b5dc9',
+    'b': '#41a6f6',
+    'V': '#181425',
+    'k': '#ffcd75',
+  };
 
   for (let f = 0; f < 4; f++) {
-    const celBody = doc.ensureCel(layerBody.id, doc.frames[f].id);
-    const celArmor = doc.ensureCel(layerArmor.id, doc.frames[f].id);
-    const celFx = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const bob = f % 2 === 0 ? 0 : 1;
+    const legStep = [0, 1, 0, -1][f];
+
+    // ---- 1. Layer: Tubuh (Body) ----
+    const headBody = [
+      "   ######   ",
+      "  #DDSSSS#  ",
+      " #DDSSSSLL# ",
+      " #DDVVVVLL# ",
+      " #DDWWVVLL# ",
+      " #DDDDSSLL# ",
+      "  #kkkkkk#  ",
+      "   ######   ",
+    ];
+    drawMatrix(cB, doc, 10, 6 + bob, headBody, K_PAL);
+
+    // Gauntlets / Arms
+    pixel(cB, doc, 9, 16 + bob, '#8b9bb4');
+    pixel(cB, doc, 9, 17 + bob, '#566c86');
+    pixel(cB, doc, 22, 16 + bob, '#8b9bb4');
+    pixel(cB, doc, 22, 17 + bob, '#566c86');
+
+    // Legs & Greaves in 4-step walk
+    const legLeftX = 11 - legStep;
+    const legRightX = 17 + legStep;
+    const footLift = f === 1 ? -1 : 0;
+    fillRect(cB, doc, legLeftX, 22 + bob, 3, 4, '#566c86');
+    fillRect(cB, doc, legLeftX - 1, 26 + bob, 4, 2, '#8b9bb4');
+    outlineRect(cB, doc, legLeftX - 1, 26 + bob, 4, 2, '#1a1c2c');
+    fillRect(cB, doc, legRightX, 22 + bob + footLift, 3, 4, '#8b9bb4');
+    fillRect(cB, doc, legRightX, 26 + bob + footLift, 4, 2, '#c0cbdc');
+    outlineRect(cB, doc, legRightX, 26 + bob + footLift, 4, 2, '#1a1c2c');
+
+    // ---- 2. Layer: Pakaian & Armor (Clothes) ----
+    const plumeRows = [
+      `  ${f === 1 ? '#rr' : '#RR'}#   `,
+      ` #rr${f === 3 ? 'r' : 'R'}r#  `,
+      `#RRRr#  `,
+      ` #RR#   `,
+    ];
+    drawMatrix(cA, doc, 8, 2 + bob, plumeRows, K_PAL);
+
+    // Visor cross plate
+    pixel(cA, doc, 15, 9 + bob, '#fee761');
+    pixel(cA, doc, 16, 9 + bob, '#fee761');
+    pixel(cA, doc, 15, 8 + bob, '#e4a672');
+    pixel(cA, doc, 15, 10 + bob, '#e4a672');
+
+    // Pauldrons (Shoulders)
+    drawMatrix(cA, doc, 7, 13 + bob, [" ### ", "#SLL#", "#DD #"], K_PAL);
+    drawMatrix(cA, doc, 20, 13 + bob, [" ### ", "#SLL#", "#DD #"], K_PAL);
+
+    // Breastplate with Royal Blue Tabard & Gold Belt
+    const chestPlate = [
+      " ####### ",
+      "#SBGBGS#",
+      "#SBGBGS#",
+      "#DBbbBD#",
+      "#DBGBGD#",
+      " #GGGG# ",
+      " #BBBB# ",
+    ];
+    drawMatrix(cA, doc, 12, 14 + bob, chestPlate, K_PAL);
+
+    // Crimson Cape fluttering
+    const capeW = f % 2 === 0 ? 0 : 1;
+    fillRect(cA, doc, 8 - capeW, 15 + bob, 3, 8, '#b13e53');
+    fillRect(cA, doc, 9 - capeW, 20 + bob, 2, 4, '#ef7d57');
+
+    // ---- 3. Layer: Senjata & FX (Weapon) ----
+    const swordBob = bob + (f === 1 ? -1 : 0);
+    // Blade
+    fillRect(cF, doc, 23, 7 + swordBob, 2, 10, '#c0cbdc');
+    pixel(cF, doc, 23, 6 + swordBob, '#ffffff');
+    pixel(cF, doc, 24, 7 + swordBob, '#ffffff');
+    fillRect(cF, doc, 23, 17 + swordBob, 2, 1, '#566c86');
+    // Crossguard
+    fillRect(cF, doc, 21, 17 + swordBob, 6, 2, '#e4a672');
+    pixel(cF, doc, 23, 17 + swordBob, '#fee761');
+    // Hilt & Pommel
+    fillRect(cF, doc, 23, 19 + swordBob, 2, 3, '#733e39');
+    fillRect(cF, doc, 23, 22 + swordBob, 2, 2, '#b13e53');
+
+    // Kite Shield on left arm
+    const shieldBob = bob + (f === 3 ? -1 : 0);
+    const shield = [
+      " ###### ",
+      "#LSSSSD#",
+      "#LBBBSD#",
+      "#LBYBSD#",
+      "#LBYBSD#",
+      " #BBYD# ",
+      "  #BD#  ",
+      "   ##   ",
+    ];
+    drawMatrix(cF, doc, 4, 13 + shieldBob, shield, K_PAL);
+  }
+}
+
+// 1.2 Penyihir (Mage)
+function buildMageCharacter(doc, layerBody, layerArmor, layerFx) {
+  const M_PAL = {
+    '#': '#1a1c2c',
+    'P': '#5d275d',
+    'p': '#793c79',
+    'D': '#3e2731',
+    'G': '#fee761',
+    'g': '#e4a672',
+    'K': '#ffcd75',
+    'W': '#ffffff',
+    'w': '#8b9bb4',
+    'B': '#733e39',
+    'b': '#a2583e',
+    'C': '#73eff7',
+    'c': '#ffffff',
+  };
+
+  for (let f = 0; f < 4; f++) {
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
     const bob = f % 2 === 0 ? 0 : 1;
     const step = [0, 1, 0, -1][f];
 
-    // 1. Body Base (Head, Skin, Feet)
-    fillRect(celBody, doc, 12, 6 + bob, 8, 8, skin);
-    fillRect(celBody, doc, 12, 12 + bob, 8, 2, skinDark);
-    fillRect(celBody, doc, 13 + Math.max(0, step), 28, 3, 3, outline);
-    fillRect(celBody, doc, 17 + Math.min(0, step), 28, 3, 3, outline);
-    // Eyes
-    pixel(celBody, doc, 18, 9 + bob, outline);
-    pixel(celBody, doc, 18, 8 + bob, '#ffffff');
+    // Face & Eyes
+    fillRect(cB, doc, 12, 8 + bob, 8, 5, '#ffcd75');
+    pixel(cB, doc, 14, 9 + bob, '#1a1c2c');
+    pixel(cB, doc, 17, 9 + bob, '#1a1c2c');
+    pixel(cB, doc, 14, 8 + bob, '#ffffff');
+    pixel(cB, doc, 17, 8 + bob, '#ffffff');
 
-    // 2. Armor / Clothes Layer
-    fillRect(celArmor, doc, 11, 14 + bob, 10, 10, cloth);
-    fillRect(celArmor, doc, 11, 22 + bob, 10, 2, clothDark);
-    fillRect(celArmor, doc, 12, 14 + bob, 8, 2, accent);
-    if (id === 'char-mage') {
-      // Wizard Hat
-      fillRect(celArmor, doc, 9, 5 + bob, 14, 2, clothDark);
-      fillRect(celArmor, doc, 12, 1 + bob, 8, 4, cloth);
-      pixel(celArmor, doc, 15, 0 + bob, '#ffec27');
-    }
+    // Long Majestic Beard
+    const beard = [
+      "  ######  ",
+      " #WWWWWW# ",
+      "#WWWWWWWW#",
+      " #WWwwWW# ",
+      "  #wwww#  ",
+      "   #ww#   ",
+      "    ##    ",
+    ];
+    drawMatrix(cB, doc, 11, 12 + bob, beard, M_PAL);
 
-    // 3. Weapon / FX Layer
-    if (id === 'char-knight') {
-      fillRect(celFx, doc, 21, 10 + bob + step, 2, 12, '#f4f4f4');
-      fillRect(celFx, doc, 19, 18 + bob + step, 6, 2, '#ef7d57');
-    } else if (id === 'char-archer') {
-      fillRect(celFx, doc, 22, 11 + bob, 1, 12, '#ef7d57');
-      pixel(celFx, doc, 21, 10 + bob, '#94b0c2');
-      pixel(celFx, doc, 21, 23 + bob, '#94b0c2');
-    } else if (id === 'char-mage') {
-      // Magic Staff
-      fillRect(celFx, doc, 22, 8 + bob, 2, 16, '#566c86');
-      fillRect(celFx, doc, 21, 5 + bob, 4, 4, '#ffec27');
+    // Shoes walking
+    fillRect(cB, doc, 11 - step, 27 + bob, 4, 2, '#733e39');
+    fillRect(cB, doc, 17 + step, 27 + bob, 4, 2, '#733e39');
+
+    // Crooked Wizard Hat
+    const hat = [
+      "       ##   ",
+      "      #PP#  ",
+      "     #pPP#  ",
+      "    #PPpP#  ",
+      "   #pPPpP#  ",
+      "  #GGGGGG#  ",
+      "############",
+      "#DDDDDDDDDD#",
+    ];
+    drawMatrix(cA, doc, 10, 1 + bob, hat, M_PAL);
+    pixel(cA, doc, 16, 6 + bob, '#fee761');
+
+    // Robe & Wide Sleeves
+    const robe = [
+      "  ########  ",
+      " #pPPPPPPp# ",
+      "#pPpPPPPpPp#",
+      "#ppGGGGGGpp#",
+      "#pPPPPPPPPp#",
+      "#PPPPPPPPPP#",
+      "#DDDDDDDDDD#",
+      "#DDDDDDDDDD#",
+      " #GGGGGGGG# ",
+      "  ########  ",
+    ];
+    drawMatrix(cA, doc, 10, 16 + bob, robe, M_PAL);
+
+    // Wooden Staff
+    const staffBob = bob + (f === 1 ? -1 : 0);
+    fillRect(cF, doc, 24, 8 + staffBob, 2, 19, '#733e39');
+    fillRect(cF, doc, 25, 9 + staffBob, 1, 17, '#a2583e');
+    pixel(cF, doc, 22, 6 + staffBob, '#e4a672');
+    pixel(cF, doc, 23, 7 + staffBob, '#e4a672');
+    pixel(cF, doc, 26, 7 + staffBob, '#e4a672');
+    pixel(cF, doc, 27, 6 + staffBob, '#e4a672');
+
+    // Floating Mana Orb & Rotating Sparkles
+    const orbOffsets = [[0, 0], [1, -1], [0, -1], [-1, 0]][f % 4];
+    const ox = 24 + orbOffsets[0], oy = 4 + staffBob + orbOffsets[1];
+    fillRect(cF, doc, ox - 1, oy - 1, 4, 4, '#73eff7');
+    pixel(cF, doc, ox, oy, '#ffffff');
+    const sparkX = [21, 28, 22, 27][f % 4];
+    const sparkY = [3, 5, 2, 3][f % 4];
+    pixel(cF, doc, sparkX, sparkY + staffBob, '#fee761');
+  }
+}
+
+// 1.3 Pemanah (Archer)
+function buildArcherCharacter(doc, layerBody, layerArmor, layerFx) {
+  const A_PAL = {
+    '#': '#181425',
+    'G': '#38b764',
+    'g': '#a7f070',
+    'D': '#257179',
+    'B': '#733e39',
+    'b': '#a2583e',
+    'H': '#ef7d57',
+    'h': '#fee761',
+    'K': '#ffcd75',
+    'W': '#ffffff',
+    'S': '#8b9bb4',
+    'R': '#b13e53',
+  };
+
+  for (let f = 0; f < 4; f++) {
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const bob = f % 2 === 0 ? 0 : 1;
+    const step = [0, 1, 0, -1][f];
+
+    // Face & Eyes
+    fillRect(cB, doc, 12, 8 + bob, 8, 6, '#ffcd75');
+    pixel(cB, doc, 14, 10 + bob, '#181425');
+    pixel(cB, doc, 17, 10 + bob, '#181425');
+    pixel(cB, doc, 18, 10 + bob, '#ffffff');
+    pixel(cB, doc, 11, 10 + bob, '#ffcd75');
+    pixel(cB, doc, 10, 9 + bob, '#ffcd75');
+
+    // Auburn Hair flowing
+    const hair = [
+      "  ####### ",
+      " #hHHHHH# ",
+      "#hHHHHHH# ",
+      "#HHH######",
+      "#HH#      ",
+    ];
+    drawMatrix(cB, doc, 10, 5 + bob, hair, A_PAL);
+
+    // Boots
+    fillRect(cB, doc, 11 - step, 24 + bob, 3, 4, '#733e39');
+    fillRect(cB, doc, 10 - step, 27 + bob, 4, 2, '#a2583e');
+    outlineRect(cB, doc, 10 - step, 27 + bob, 4, 2, '#181425');
+    fillRect(cB, doc, 17 + step, 24 + bob, 3, 4, '#733e39');
+    fillRect(cB, doc, 17 + step, 27 + bob, 4, 2, '#a2583e');
+    outlineRect(cB, doc, 17 + step, 27 + bob, 4, 2, '#181425');
+
+    // Cap with Crimson Feather
+    const cap = [
+      "    #RR#   ",
+      "   #R##    ",
+      "  #GGGGG#  ",
+      " #GGGGGGG# ",
+      "########## ",
+    ];
+    drawMatrix(cA, doc, 11, 2 + bob, cap, A_PAL);
+
+    // Green Tunic & Leather Vest
+    const tunic = [
+      "  ######  ",
+      " #GgGGgG# ",
+      "#GgBBBBgG#",
+      "#GBbbbbBG#",
+      " #BBBBBB# ",
+      " #GGDGDG# ",
+      " #GGDGDG# ",
+    ];
+    drawMatrix(cA, doc, 11, 14 + bob, tunic, A_PAL);
+
+    // Quiver on Back with Arrows
+    fillRect(cA, doc, 8, 11 + bob, 3, 9, '#733e39');
+    pixel(cA, doc, 8, 9 + bob, '#ffffff');
+    pixel(cA, doc, 9, 8 + bob, '#ffffff');
+    pixel(cA, doc, 10, 9 + bob, '#ffffff');
+
+    // Recurve Hunting Bow & Arrow
+    const bowX = 22, bowY = 10 + bob;
+    pixel(cF, doc, bowX, bowY, '#a2583e');
+    pixel(cF, doc, bowX + 1, bowY + 1, '#733e39');
+    pixel(cF, doc, bowX + 2, bowY + 2, '#733e39');
+    pixel(cF, doc, bowX + 2, bowY + 3, '#733e39');
+    pixel(cF, doc, bowX + 2, bowY + 4, '#733e39');
+    pixel(cF, doc, bowX + 2, bowY + 5, '#733e39');
+    pixel(cF, doc, bowX + 1, bowY + 6, '#733e39');
+    pixel(cF, doc, bowX, bowY + 7, '#a2583e');
+    for (let sy = bowY + 1; sy <= bowY + 6; sy++) pixel(cF, doc, bowX - 1, sy, '#f4f4f4');
+    fillRect(cF, doc, bowX - 3, bowY + 3, 7, 1, '#a2583e');
+    pixel(cF, doc, bowX + 4, bowY + 3, '#8b9bb4');
+  }
+}
+
+// 1.4 Pembunuh Bayangan (Rogue)
+function buildRogueCharacter(doc, layerBody, layerArmor, layerFx) {
+  const R_PAL = {
+    '#': '#181425',
+    'C': '#262b44',
+    'c': '#3b5dc9',
+    'D': '#181425',
+    'G': '#566c86',
+    'K': '#ffcd75',
+    'E': '#73eff7',
+    'P': '#38b764',
+    'p': '#a7f070',
+    'S': '#c0cbdc',
+  };
+
+  for (let f = 0; f < 4; f++) {
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const bob = f % 2 === 0 ? 0 : 1;
+    const step = [0, 1, 0, -1][f];
+
+    // Masked Face & Piercing Cyan Eyes
+    fillRect(cB, doc, 12, 9 + bob, 8, 5, '#181425');
+    fillRect(cB, doc, 13, 8 + bob, 6, 2, '#ffcd75');
+    pixel(cB, doc, 14, 9 + bob, '#73eff7');
+    pixel(cB, doc, 17, 9 + bob, '#73eff7');
+
+    // Tabi silent boots
+    fillRect(cB, doc, 11 - step, 25 + bob, 3, 3, '#181425');
+    fillRect(cB, doc, 10 - step, 27 + bob, 4, 1, '#262b44');
+    fillRect(cB, doc, 17 + step, 25 + bob, 3, 3, '#181425');
+    fillRect(cB, doc, 17 + step, 27 + bob, 4, 1, '#262b44');
+
+    // Shadow Hood
+    const hood = [
+      "   #####   ",
+      "  #CCCCC#  ",
+      " #CcCCCC#  ",
+      "#CcCCCCCC# ",
+      "#CCCCCCCC# ",
+    ];
+    drawMatrix(cA, doc, 10, 4 + bob, hood, R_PAL);
+
+    // Billowing Midnight Scarf
+    const scarfWave = f === 1 ? -1 : f === 3 ? 1 : 0;
+    fillRect(cA, doc, 6, 13 + bob + scarfWave, 5, 2, '#3b5dc9');
+    fillRect(cA, doc, 4, 14 + bob + scarfWave, 4, 2, '#262b44');
+
+    // Stealth Tunic & Harness
+    const leathers = [
+      "  ######  ",
+      " #CCCCCC# ",
+      "#CcGGGGcC#",
+      "#CGGGGGGC#",
+      " #GGGGGG# ",
+      " #CCCCCC# ",
+      " #DDDDDD# ",
+    ];
+    drawMatrix(cA, doc, 11, 14 + bob, leathers, R_PAL);
+
+    // Dual Curved Poison Daggers
+    const d1Bob = bob + (f === 1 ? -1 : 0);
+    fillRect(cF, doc, 23, 13 + d1Bob, 2, 7, '#c0cbdc');
+    pixel(cF, doc, 23, 12 + d1Bob, '#a7f070');
+    pixel(cF, doc, 24, 13 + d1Bob, '#38b764');
+    fillRect(cF, doc, 21, 17 + d1Bob, 5, 1, '#181425');
+    fillRect(cF, doc, 23, 18 + d1Bob, 2, 3, '#566c86');
+
+    const d2Bob = bob + (f === 3 ? -1 : 0);
+    fillRect(cF, doc, 7, 16 + d2Bob, 2, 6, '#c0cbdc');
+    pixel(cF, doc, 7, 22 + d2Bob, '#a7f070');
+    fillRect(cF, doc, 6, 16 + d2Bob, 4, 1, '#181425');
+  }
+}
+
+// 1.5 Tengkorak (Skeleton)
+function buildSkeletonCharacter(doc, layerBody, layerArmor, layerFx) {
+  const S_PAL = {
+    '#': '#181425',
+    'W': '#f4f4f4',
+    'w': '#8b9bb4',
+    'D': '#566c86',
+    'R': '#733e39',
+    'r': '#e4a672',
+    'E': '#ef7d57',
+  };
+
+  for (let f = 0; f < 4; f++) {
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const bob = f % 2 === 0 ? 0 : 1;
+    const step = [0, 1, 0, -1][f];
+
+    // Skull with Glowing Soul Embers & Teeth
+    const skull = [
+      "   #####   ",
+      "  #WWWWW#  ",
+      " #WWWWWWW# ",
+      " #W#E#W#E# ",
+      " #WW#WW#W# ",
+      "  #WWWWw#  ",
+      "  #W#W#W#  ",
+      "   #####   ",
+    ];
+    drawMatrix(cB, doc, 11, 5 + bob, skull, S_PAL);
+
+    // Spine & Ribcage
+    fillRect(cB, doc, 15, 13 + bob, 2, 7, '#8b9bb4');
+    for (let r = 0; r < 3; r++) {
+      fillRect(cB, doc, 12, 14 + bob + r * 2, 8, 1, '#f4f4f4');
+      pixel(cB, doc, 11, 14 + bob + r * 2, '#8b9bb4');
+      pixel(cB, doc, 20, 14 + bob + r * 2, '#8b9bb4');
     }
+    // Pelvis
+    fillRect(cB, doc, 13, 20 + bob, 6, 2, '#f4f4f4');
+    outlineRect(cB, doc, 13, 20 + bob, 6, 2, '#181425');
+
+    // Clattering Leg Bones
+    const lX = 12 - step, rX = 17 + step;
+    fillRect(cB, doc, lX, 22 + bob, 2, 5, '#f4f4f4');
+    fillRect(cB, doc, lX - 1, 27 + bob, 3, 1, '#8b9bb4');
+    fillRect(cB, doc, rX, 22 + bob, 2, 5, '#f4f4f4');
+    fillRect(cB, doc, rX, 27 + bob, 3, 1, '#8b9bb4');
+
+    // Horned Helmet Fragment
+    const helm = [
+      "#R         ",
+      " #Rr#####  ",
+      "  #RrRRRR# ",
+      "   ######  ",
+    ];
+    drawMatrix(cA, doc, 9, 3 + bob, helm, S_PAL);
+
+    // Rusted Spiked Pauldron & Loincloth
+    fillRect(cA, doc, 9, 13 + bob, 4, 3, '#733e39');
+    pixel(cA, doc, 8, 12 + bob, '#e4a672');
+    fillRect(cA, doc, 13, 21 + bob, 6, 3, '#3e2731');
+    pixel(cA, doc, 14, 24 + bob, '#733e39');
+
+    // Ancient Chipped Broadsword
+    const wBob = bob + (f === 1 ? -1 : 0);
+    fillRect(cF, doc, 23, 7 + wBob, 3, 11, '#733e39');
+    pixel(cF, doc, 23, 6 + wBob, '#e4a672');
+    pixel(cF, doc, 25, 11 + wBob, '#181425');
+    pixel(cF, doc, 23, 14 + wBob, '#181425');
+    fillRect(cF, doc, 21, 18 + wBob, 7, 2, '#181425');
+    fillRect(cF, doc, 23, 20 + wBob, 2, 3, '#f4f4f4');
+  }
+}
+
+// 1.6 Manekin Dasar (Artist Base Mannequin)
+function buildMannequinCharacter(doc, layerBody, layerArmor, layerFx) {
+  const D_PAL = {
+    '#': '#493c2b',
+    'W': '#d9a066',
+    'w': '#eec39a',
+    'D': '#8f563b',
+    'J': '#262b44',
+    'A': '#41a6f6',
+  };
+
+  for (let f = 0; f < 4; f++) {
+    const cB = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    const cA = doc.ensureCel(layerArmor.id, doc.frames[f].id);
+    const cF = doc.ensureCel(layerFx.id, doc.frames[f].id);
+    const bob = f % 2 === 0 ? 0 : 1;
+    const step = [0, 1, 0, -1][f];
+
+    // Head Sphere with Anatomy Crosshair Guide
+    const head = [
+      "   #####   ",
+      "  #wWWWW#  ",
+      " #wWWAAWW# ",
+      " #wWAAAAw# ",
+      " #wWWAAWW# ",
+      "  #WWDDD#  ",
+      "   #####   ",
+    ];
+    drawMatrix(cB, doc, 11, 5 + bob, head, D_PAL);
+
+    // Neck Ball-Joint
+    fillRect(cB, doc, 14, 12 + bob, 3, 2, '#262b44');
+
+    // Segmented Torso
+    const chest = [
+      "  #######  ",
+      " #wWWWWWW# ",
+      "#wWWWWWWWW#",
+      "#wWWWWWWWW#",
+      " #WDDDDDW# ",
+      "  #JJJJ#  ",
+      " #wWWWWWW# ",
+      "  ######  ",
+    ];
+    drawMatrix(cB, doc, 11, 13 + bob, chest, D_PAL);
+
+    // Ball-jointed Legs & Feet
+    const lX = 12 - step, rX = 17 + step;
+    fillRect(cB, doc, lX, 21 + bob, 2, 1, '#262b44');
+    fillRect(cB, doc, lX, 22 + bob, 2, 2, '#d9a066');
+    fillRect(cB, doc, lX, 24 + bob, 2, 1, '#262b44');
+    fillRect(cB, doc, lX, 25 + bob, 2, 2, '#8f563b');
+    fillRect(cB, doc, lX - 1, 27 + bob, 3, 2, '#d9a066');
+    outlineRect(cB, doc, lX - 1, 27 + bob, 3, 2, '#493c2b');
+
+    fillRect(cB, doc, rX, 21 + bob, 2, 1, '#262b44');
+    fillRect(cB, doc, rX, 22 + bob, 2, 2, '#d9a066');
+    fillRect(cB, doc, rX, 24 + bob, 2, 1, '#262b44');
+    fillRect(cB, doc, rX, 25 + bob, 2, 2, '#8f563b');
+    fillRect(cB, doc, rX, 27 + bob, 3, 2, '#d9a066');
+    outlineRect(cB, doc, rX, 27 + bob, 3, 2, '#493c2b');
+
+    // Guide Rings across chest and waist
+    for (let x = 13; x <= 18; x += 2) pixel(cA, doc, x, 15 + bob, '#41a6f6');
+    for (let x = 13; x <= 18; x += 2) pixel(cA, doc, x, 19 + bob, '#41a6f6');
+
+    // Ground Ellipse Shadow
+    fillRect(cF, doc, 10, 29, 12, 2, '#262b44');
+    fillRect(cF, doc, 12, 28, 8, 3, '#1a1c2c');
+  }
+}
+
+// 1.7 Slime (16x16, 4 frame bounce)
+function buildSlimeCharacter(doc, layerBody) {
+  doc.tags = [{ name: 'bounce', from: 0, to: 3, direction: 'pingpong', repeat: 0, color: '#a7f070' }];
+  const S_PAL = {
+    '#': '#181425',
+    'G': '#38b764',
+    'g': '#a7f070',
+    'W': '#ffffff',
+    'D': '#257179',
+    'E': '#181425',
+  };
+
+  const f0 = [
+    "      ####      ",
+    "    ##gggg##    ",
+    "   #ggWWgggg#   ",
+    "  #gWWggggggg#  ",
+    "  #gggggggggg#  ",
+    " #gggggggggggg# ",
+    " #gEgEggggEgEg# ",
+    " #g#E#gggg#E#g# ",
+    " #gggggggggggg# ",
+    " #DDDDDDDDDDDD# ",
+    "  #DDDDDDDDDD#  ",
+    "   ##########   ",
+  ];
+  const f1 = [
+    "                ",
+    "                ",
+    "   ##########   ",
+    "  #gggggggggg#  ",
+    " #ggWWgggggggg# ",
+    " #gWWggggggggg# ",
+    " #gEggggggggEg# ",
+    " #GGGGGGGGGGGG# ",
+    " #DDDDDDDDDDDD# ",
+    " #DDDDDDDDDDDD# ",
+    "  ############  ",
+  ];
+  const f2 = [
+    "     ####     ",
+    "    #gggg#    ",
+    "   #ggWWgg#   ",
+    "   #gWWggg#   ",
+    "   #gggggg#   ",
+    "   #gEggEg#   ",
+    "   #g#gg#g#   ",
+    "   #gggggg#   ",
+    "    #DDDD#    ",
+    "    #DDDD#    ",
+    "     ####     ",
+  ];
+  const f3 = [
+    "                ",
+    "                ",
+    "                ",
+    "  #  ######  #  ",
+    " #  #gggggg#  # ",
+    "   #ggWWgggg#   ",
+    "  #gEggggggggEg# ",
+    "  #DDDDDDDDDD#  ",
+    "   ##########   ",
+  ];
+
+  const frames = [f0, f1, f2, f3];
+  const yOffsets = [2, 4, 1, 4];
+  const xOffsets = [0, 0, 1, 0];
+
+  for (let f = 0; f < 4; f++) {
+    const cel = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    drawMatrix(cel, doc, xOffsets[f], yOffsets[f], frames[f], S_PAL);
+  }
+}
+
+// 1.8 Kelelawar Gua (Bat, 16x16, 4 frame fly)
+function buildBatCharacter(doc, layerBody) {
+  doc.tags = [{ name: 'fly', from: 0, to: 3, direction: 'forward', repeat: 0, color: '#b13e53' }];
+  const B_PAL = {
+    '#': '#181425',
+    'P': '#5d275d',
+    'p': '#b13e53',
+    'M': '#3e2731',
+    'D': '#262b44',
+    'Y': '#fee761',
+    'W': '#ffffff',
+  };
+
+  const f0 = [
+    " #            # ",
+    " ##          ## ",
+    " #D#  ####  #D# ",
+    " #MD##PPpp##DM# ",
+    "  #M#PppPP#M#   ",
+    "   ##PYPYP##    ",
+    "    #PWWP#      ",
+    "    #PPPP#      ",
+    "     #DD#       ",
+    "      ##        ",
+  ];
+  const f1 = [
+    " #####    ##### ",
+    " #DDD######DDD# ",
+    " #MM#PPppPP#MM# ",
+    "  ##PPYPYPP##   ",
+    "   #PPWWPP#     ",
+    "    #PPPP#      ",
+    "     #DD#       ",
+    "      ##        ",
+  ];
+  const f2 = [
+    "      ####      ",
+    "     #PPpp#     ",
+    "  ####PYPY####  ",
+    " #DDD#PWWP#DDD# ",
+    " #MMM#PPPP#MMM# ",
+    "  #MM#DDDD#MM#  ",
+    "   ##      ##   ",
+  ];
+  const f3 = [
+    "      ####      ",
+    "     #PPpp#     ",
+    "    #PPYPYPP#   ",
+    "    #PPWWPP#    ",
+    "    ##PPPP##    ",
+    "   #DD#PP#DD#   ",
+    "   #MM#DD#MM#   ",
+    "    ##    ##    ",
+  ];
+
+  const frames = [f0, f1, f2, f3];
+  const yOffsets = [2, 3, 4, 3];
+
+  for (let f = 0; f < 4; f++) {
+    const cel = doc.ensureCel(layerBody.id, doc.frames[f].id);
+    drawMatrix(cel, doc, 0, yOffsets[f], frames[f], B_PAL);
   }
 }
 
