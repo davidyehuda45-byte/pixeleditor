@@ -104,10 +104,9 @@ export function pixelPerfectFilter(points) {
     out.push(points[i]);
     while (out.length >= 3) {
       const a = out[out.length - 3], b = out[out.length - 2], c = out[out.length - 1];
-      const ab = [Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])];
-      const bc = [Math.abs(b[0] - c[0]), Math.abs(b[1] - c[1])];
-      const diag = ab[0] === 1 && ab[1] === 1 && bc[0] === 1 && bc[1] === 1;
-      if (diag) out.splice(out.length - 2, 1);
+      const isL = Math.abs(a[0] - c[0]) === 1 && Math.abs(a[1] - c[1]) === 1 &&
+        ((b[0] === a[0] && b[1] === c[1]) || (b[0] === c[0] && b[1] === a[1]));
+      if (isL) out.splice(out.length - 2, 1);
       else break;
     }
   }

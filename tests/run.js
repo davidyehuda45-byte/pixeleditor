@@ -10,6 +10,8 @@ import { projectTests } from './project.test.js';
 import { encoderTests } from './encoders.test.js';
 import { sheetTests } from './spritesheet.test.js';
 import { exporterTests } from './exporters.test.js';
+import { toolTests } from './tools.test.js';
+import { cliTests } from './cli.test.js';
 
 const suites = [
   ['raster', rasterTests],
@@ -20,6 +22,8 @@ const suites = [
   ['encoders', encoderTests],
   ['spritesheet', sheetTests],
   ['exporters', exporterTests],
+  ['tools', toolTests],
+  ['cli', cliTests],
 ];
 
 let passed = 0, failed = 0;
