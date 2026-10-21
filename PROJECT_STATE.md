@@ -2,6 +2,8 @@
 
 **Current State**: Production Ready (Milestones M1–M9 Complete + 70 Modular 2D Game Dev Templates)  
 **Last Updated**: 2026-10-21  
+**Repository**: https://github.com/davidyehuda45-byte/pixeleditor  
+**Live Demo (Pages)**: https://davidyehuda45-byte.github.io/pixeleditor/  
 **Architecture**: React 19 + Vite 6 + Vanilla JS ES Modules + Native CSS
 
 ## Quick Start
