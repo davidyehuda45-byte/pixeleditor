@@ -1,144 +1,204 @@
-# PixelForge 🎨
+# PixelForge
 
-> **Studio Pixel Art & Editor Animasi Sprite Lokal**  
-> 100% Berjalan Lokal di Browser • Tanpa Server • Tanpa Anti-Aliasing • Siap untuk Game Engine
+A browser-native, offline-first pixel art editor and sprite animation studio engineered for 2D game pipelines. Built with zero UI framework bloat, hard-pixel raster guarantees, pure JavaScript media encoders, and direct export targets for Godot 4, Unity, Aseprite, and GameMaker.
 
-PixelForge adalah aplikasi web editor pixel art dan animasi sprite tingkat produksi yang dirancang khusus untuk kebutuhan game developer dan seniman piksel. Seluruh logika berjalan 100% di browser tanpa ketergantungan server, akun, atau telemetri.
-
----
-
-## 🚀 Fitur Utama
-
-- **Piksel Selalu Tegas**: Rendering menggunakan nearest-neighbor scaling (100%–6400%) tanpa blur atau anti-aliasing. Nilai alpha tegas 0 atau 255.
-- **Alat Gambar Lengkap**:
-  - Pensil, Penghapus, Eyedropper, Flood Fill iteratif (scanline).
-  - Garis (Bresenham), Persegi, Persegi Bulat (rounded-rect), Elips, Poligon, dan Kurva Bezier.
-  - Mode **Pixel-perfect** untuk menghapus piksel L-corner ekstra.
-  - Kuas Dithering (Bayer 2x2/4x4/8x8, checker, garis, titik) dan gradient tool berpalet.
-  - Shading/ramp brush, spray brush dengan seed tetap, dan teks dengan bitmap font bawaan.
-  - Simetri (horizontal, vertikal, keduanya, radial 2–12 sumbu) dan Tiled/wrap drawing untuk tekstur seamless.
-- **Seleksi & Transformasi Bebas**:
-  - Marquee persegi, elips, lasso, polygon lasso, dan magic wand.
-  - Transformasi rotasi, flip, scale nearest-neighbor, serta efek piksel (outline otomatis, drop shadow, replace color, adjust HSV/kontras).
-- **Sistem Layer Tingkat Lanjut**:
-  - Susunan hierarkis dengan grup layer (folder), lock layer, lock alpha, clipping mask, dan layer referensi (tidak ikut terekspor).
-  - Berbagai blend mode: `normal`, `multiply`, `screen`, `overlay`, `darken`, `lighten`, `add`, `subtract`, `difference`.
-- **Timeline Animasi & Live Preview**:
-  - Manajemen frame dengan durasi kustom (ms) dan FPS global.
-  - Onion skinning multi-frame dengan penandaan warna (merah untuk frame sebelumnya, biru untuk frame berikutnya).
-  - Tag animasi (seperti `idle`, `walk`, `attack`) dengan arah playback forward, reverse, dan ping-pong.
-  - **Linked Cels**: berbagi data cel piksel antar frame untuk efisiensi animasi.
-- **Palet Warna & Swapping**:
-  - Color picker lengkap (RGB, HSV, HSL, Hex, Alpha).
-  - Impor dan ekspor format `.gpl` (GIMP), `.hex` (Lospec), dan `.pal` (JASC).
-  - Mode **Indexed Color**: mengubah warna palet otomatis memperbarui seluruh piksel terkait secara instan.
-- **Ekspor Siap Game Engine**:
-  - **Godot 4.x**: Menghasilkan berkas `.tres` bertipe `SpriteFrames` yang langsung dapat diseret ke `AnimatedSprite2D`.
-  - **Unity**: Menghasilkan atlas PNG dan metadata slicing 9-slice `.json`.
-  - **Aseprite & TexturePacker**: Metadata format JSON (varian array dan hash).
-  - **GameMaker**: Format horizontal strip dengan penomoran frame otomatis.
-  - Format gambar: PNG transparan, GIF animasi (LZW lokal), dan urutan PNG dalam berkas ZIP.
-  - Opsi Sprite Sheet: layout horizontal, vertikal, grid, trim transparan, deduplikasi frame identik, dan **border extrude** (mencegah bleeding tekstur saat kamera bergerak).
-- **Pustaka 70 Templat Game 2D**:
-  - Pustaka templat bawaan siap pakai (`Ctrl+Shift+N`) yang terbagi dalam 7 kategori esensial: Karakter & Monster, Bangunan RPG, Senjata, Item & Loot, Tileset 16×16, Efek Visual (FX), dan UI Retro 9-Slice.
-  - Setiap templat dilengkapi pemisahan multi-layer independen, frame animasi, tag, dan metadata collision/anchor yang siap dikustomisasi.
-- **Headless CLI**:
-  - Ekspor berkas `.pfx` tanpa browser menggunakan `node tools/cli.js`.
-- **PWA & Aksesibilitas**:
-  - Dukungan Progressive Web App (PWA) lengkap dan bekerja saat offline.
-  - Antarmuka bilingual: **Bahasa Indonesia** (default) dan **English**.
-  - Tema antarmuka: Gelap (Dark), Terang (Light), dan Kontras Tinggi (High Contrast).
-  - Command Palette (`Ctrl+K`) untuk mencari dan menjalankan perintah dengan cepat.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Tests: 58 passed](https://img.shields.io/badge/Tests-58%20passed-brightgreen.svg)](#testing)
+[![Dependencies: 2](https://img.shields.io/badge/Dependencies-React%20%7C%20Vite-informational.svg)](package.json)
+[![Offline: PWA](https://img.shields.io/badge/Offline-PWA%20Ready-success.svg)](#architecture)
 
 ---
 
-## ⌨️ Daftar Shortcut Keyboard
+## Why PixelForge?
 
-| Alat / Aksi | Shortcut |
-|---|---|
-| Pensil (`Pencil`) | `P` |
-| Penghapus (`Eraser`) | `E` |
-| Ember Cat (`Fill Bucket`) | `G` |
-| Kuas Dither (`Brush`) | `B` |
-| Pipet Warna (`Eyedropper`) | `I` |
-| Seleksi Marquee (`Select`) | `M` |
-| Alat Pindah (`Move`) | `V` |
-| Garis (`Line`) | `L` |
-| Persegi (`Rectangle`) | `R` |
-| Elips / Lingkaran (`Ellipse`) | `O` |
-| Teks (`Text`) | `T` |
-| Kaca Pembesar (`Zoom`) | `Z` |
-| Alat Tangan (`Hand`) | `H` |
-| Tukar Warna Depan / Belakang | `X` |
-| Perkecil / Perbesar Ukuran Kuas | `[` / `]` |
-| Undo / Redo | `Ctrl+Z` / `Ctrl+Y` atau `Ctrl+Shift+Z` |
-| Simpan / Simpan Sebagai | `Ctrl+S` / `Ctrl+Shift+S` |
-| Ekspor Dialog | `Ctrl+E` |
-| Salin / Potong / Tempel | `Ctrl+C` / `Ctrl+X` / `Ctrl+V` |
-| Pilih Semua / Batal Pilih | `Ctrl+A` / `Ctrl+D` |
-| Pan Kanvas | `Spasi` + Drag mouse atau Tombol Tengah Mouse |
-| Frame Sebelumnya / Berikutnya | `,` / `.` |
-| Putar / Jeda Animasi | `Enter` |
-| Tampilkan / Sembunyikan Grid | `Ctrl+'` |
-| Command Palette | `Ctrl+K` |
+Most web-based drawing tools treat pixel art as scaled HTML5 canvas drawings, causing subpixel bleeding, anti-aliased interpolation, and lossy compression artifacts. PixelForge was designed from the ground up for technical pixel artists and game developers:
+
+1. **Hard Pixel Guarantee**: Nearest-neighbor scaling from 100% to 6400%. Alpha channel is strictly binary (0 or 255) by default to eliminate transparent halos in game engines.
+2. **Deterministic Raster Engine**: In-house implementations of Bresenham line/ellipse, scanline flood fill, RotSprite, Scale2x/xBRZ, Bayer matrix dithering, and 47-tile autotile bitmasking.
+3. **Engine-First Exporters**: Generates ready-to-use Godot 4 `.tres` `SpriteFrames`, Unity 9-slice slicing metadata, Aseprite-compatible JSON (hash/array), and TexturePacker formats with border extrude to prevent tile bleeding.
+4. **Local-First & Zero Telemetry**: Operates completely client-side. Saves projects directly to your filesystem via the File System Access API with automatic IndexedDB crash recovery.
+5. **Headless Node CLI**: Automate sprite sheet baking and format conversions in your CI/CD pipelines without launching a browser.
+6. **Self-Contained Encoders**: Zero external binary dependencies. Pure JavaScript encoders for PNG (zlib/deflate via `CompressionStream` with uncompressed block fallback), animated GIF (LZW compression), and ZIP archives.
 
 ---
 
-## 🛠️ Cara Menjalankan
+## Quickstart
 
-### Persyaratan
-- Node.js (v18 ke atas disarankan)
+### Prerequisites
+- Node.js 18 or newer
+- npm 9 or newer
 
-### Menjalankan Mode Pengembangan
 ```bash
-# Clone atau buka direktori proyek
-cd PembuatKarakterPixel
+# Clone the repository
+git clone https://github.com/your-username/pixelforge.git
+cd pixelforge
 
-# Jalankan Vite development server
+# Install dependencies (only React 19 and Vite)
+npm install
+
+# Start local development server
 npm run dev
 ```
-Akses di peramban pada alamat `http://localhost:5173`.
 
-### Membangun Versi Produksi
+Open `http://localhost:5173` in any modern Chromium, Firefox, or Safari browser.
+
+### Production Build
 ```bash
 npm run build
 ```
-Hasil build mandiri akan tersimpan di folder `dist/` dan siap disajikan lewat web server statis apa pun.
+Generates a static production bundle in `dist/` that can be served from any static host (GitHub Pages, Vercel, Netlify, or an internal file server) with zero server-side runtime.
 
-### Menjalankan Unit Test
+---
+
+## Core Capabilities
+
+### Drawing & Raster Tools
+- **Precision Drawing**: Pencil, Eraser, Eyedropper, Scanline Flood Fill with tolerance and contiguous/global modes.
+- **Pixel-Perfect Filter**: Real-time removal of unsightly L-corner pixel nubs on freehand strokes.
+- **Parametric Shapes**: Bresenham lines, rectangles, rounded rectangles, ellipses, polygons, and Bezier curves (linear, quadratic, cubic).
+- **Advanced Brushes**: Bayer ordered dithering (2×2, 4×4, 8×8), checkerboard, palette-ramp shading brush, deterministic seeded spray brush, and bitmap text with 3 built-in micro-fonts.
+- **Symmetry & Tiling**: Real-time horizontal, vertical, dual-axis, and 2–12 axis radial symmetry. Seamless tile-wrap drawing mode for infinite textures.
+
+### Layers & Compositing
+- Layer hierarchy with folders/groups, individual opacity, visibility, layer locking, and alpha locking.
+- **Blend Modes**: Normal, Multiply, Screen, Overlay, Darken, Lighten, Add, Subtract, Difference.
+- **Clipping Masks**: Clip upper layers strictly to the alpha boundary of base layers.
+- **Reference Layers**: Trace sketches and model sheets without including them in final exports.
+
+### Timeline & Cel Animation
+- Multi-frame timeline with per-frame duration overrides (ms) and global FPS playback.
+- **Linked Cels**: Share pixel cel data across multiple frames—edits propagate automatically.
+- **Multi-Frame Onion Skinning**: Configurable past (red tint) and future (blue tint) frame shadows.
+- **Animation Tags**: Define ranges (`idle`, `walk`, `attack`, `hurt`) with playback directions: Forward, Reverse, Ping-Pong.
+
+### 70 Modular 2D Game Templates
+Press `Ctrl+Shift+N` to open the template catalog. Includes 70 procedural templates across 7 categories:
+- **Characters & Monsters (14)**: Warrior, Rogue, Mage, Cleric, Archer, Paladin, Necromancer, Goblin, Skeleton, Slime, Orc, Golem, Dragon, Boss Demon. (Multi-layer structure: shadow, base, clothes, armor, weapon, helm).
+- **Buildings (10)**: Village House, Blacksmith, Wizard Tower, Dungeon Entrance, Tavern, Windmill, Castle Gate, Shop, Guard Post, Church.
+- **Weapons (10)**: Iron Sword, Wooden Bow, Magic Staff, Battle Axe, Dagger, Crossbow, Warhammer, Halberd, Spellbook, Shield.
+- **Items & Loot (10)**: Health Potion, Mana Potion, Gold Coin, Treasure Chest, Dungeon Key, Gemstone, Ancient Scroll, Meat/Food, Ring, Crown.
+- **16×16 Tilesets (10)**: Grassland, Dungeon Stone, Desert Sand, Snow/Ice, Cave Rock, Castle Interior, Forest Path, Lava, Water/Coast, Sci-Fi Metal.
+- **Combat FX (8)**: Fireball, Lightning, Slash, Ice Spike, Poison Cloud, Magic Shield, Heal Sparkle, Explosion.
+- **Retro UI (8)**: Dialog Box, Health/Mana Bar, Inventory Slot 9-Slice, Action Button, Tooltip, Minimap Frame, Quest Window, Pause Menu.
+
+---
+
+## Headless CLI
+
+Export, slice, and convert `.pfx` project files directly from the command line:
+
+```bash
+# Print CLI usage and available options
+node tools/cli.js --help
+
+# Inspect document dimensions, frames, layers, and tags
+node tools/cli.js info assets/hero.pfx
+
+# Export sprite sheet + Godot 4 .tres SpriteFrames with 2x scale
+node tools/cli.js export assets/hero.pfx --godot --scale 2 --out dist/assets/
+
+# Export single animation tag to an animated GIF
+node tools/cli.js export assets/hero.pfx --gif --tag walk --out dist/previews/
+
+# Export trimmed horizontal sprite sheet with 1px border extrude (anti-bleed)
+node tools/cli.js export assets/tiles.pfx --sheet --trim --extrude 1 --out build/
+```
+
+### CLI Flag Reference
+| Flag | Description | Default |
+|---|---|---|
+| `--format <fmt>` | Output format: `sheet`, `png`, `gif`, `godot`, `zip` | `sheet` |
+| `--scale <n>` | Integer multiplier (1–16) via nearest-neighbor | `1` |
+| `--tag <name>` | Restrict export to frames belonging to specified tag | All |
+| `--layout <type>` | Layout structure: `horizontal`, `vertical`, `grid`, `packed` | `horizontal` |
+| `--columns <n>` | Column count when using `--layout grid` | `8` |
+| `--padding <n>` | Pixel gap placed between frames | `0` |
+| `--extrude <n>` | Repeat edge pixels outward to prevent texture atlas bleeding | `0` |
+| `--trim` | Crop uniform transparent margins per frame | `false` |
+| `--dedupe` | Map identical cels to identical atlas positions | `false` |
+| `--power-of-two` | Pad overall sheet width/height to nearest power-of-two | `false` |
+
+---
+
+## Game Engine Integration
+
+PixelForge outputs native, production-tested formats for major engines:
+
+- **Godot 4.x**: Generates `.tres` (`SpriteFrames`) referencing atlas regions, preserving animation tags, frame durations, and loop flags. Drag directly onto an `AnimatedSprite2D`. Read the [Godot Integration Guide](docs/GODOT.md).
+- **Unity**: Generates PNG atlas and JSON slicing data including 9-slice borders. Read the [Unity Integration Guide](docs/UNITY.md).
+- **GameMaker**: Horizontal strip export with uniform frame stride. Read the [GameMaker Guide](docs/GAMEMAKER.md).
+- **Aseprite & TexturePacker**: Compatible `.json` array and hash schemas for custom game engines.
+- **File Format Specification**: Document schema for native `.pfx` JSON files is documented in [docs/FILE_FORMAT.md](docs/FILE_FORMAT.md).
+
+---
+
+## Keyboard Shortcuts
+
+| Command | Key | Command | Key |
+|---|---|---|---|
+| Pencil | `P` | Zoom Tool | `Z` |
+| Eraser | `E` | Pan Canvas | `Space` + Drag / Middle Mouse |
+| Fill Bucket | `G` | Toggle Grid | `Ctrl + '` |
+| Dither Brush | `B` | Swap Colors | `X` |
+| Eyedropper | `I` | Brush Size Dec/Inc | `[` / `]` |
+| Marquee Select | `M` | Undo / Redo | `Ctrl + Z` / `Ctrl + Y` |
+| Move Tool | `V` | Save Project | `Ctrl + S` |
+| Line Tool | `L` | Export Dialog | `Ctrl + E` |
+| Rectangle | `R` | Template Catalog | `Ctrl + Shift + N` |
+| Ellipse | `O` | Command Palette | `Ctrl + K` |
+| Text Tool | `T` | Play / Pause | `Enter` |
+| Prev / Next Frame | `,` / `.` | Next / Prev Frame | `.` / `,` |
+
+---
+
+## Architecture
+
+```
+PembuatKarakterPixel/
+├── docs/                   # Engine integration guides & specs
+│   ├── ARCHITECTURE.md     # Full architectural documentation
+│   ├── FILE_FORMAT.md      # .pfx schema specification
+│   ├── GODOT.md            # Godot 4.x SpriteFrames guide
+│   ├── UNITY.md            # Unity 9-slice and sprite guide
+│   └── GAMEMAKER.md        # GameMaker strip guide
+├── src/
+│   ├── core/               # PixelDocument model, history, compositor
+│   │   ├── templates/      # 70 modular game asset templates
+│   │   ├── compositor.js   # Blend modes, clipping masks, layer tree
+│   │   ├── history.js      # Memory-capped command stack + byte diffs
+│   │   └── document.js     # Frames, cels, layers, tags, metadata
+│   ├── tools/              # Raster algorithms (Bresenham, flood fill, etc.)
+│   ├── io/                 # Native pure JS encoders (PNG, GIF, ZIP, PFX)
+│   ├── render/             # Canvas viewport, checkerboard, onion skin
+│   ├── components/         # Clean React 19 UI panels
+│   └── App.jsx             # Main application orchestrator
+├── tools/
+│   └── cli.js              # Headless CLI exporter (Node.js)
+└── tests/                  # 58 zero-dependency unit tests
+```
+
+---
+
+## Testing
+
+PixelForge maintains an internal, dependency-free test runner (`tests/run.js`) to guarantee deterministic pixel math across environments:
+
 ```bash
 npm test
 ```
-Menjalankan 58 unit test mandiri tanpa framework eksternal.
 
-### Menggunakan CLI Headless
-```bash
-# Tampilkan petunjuk CLI
-node tools/cli.js --help
-
-# Ekspor sprite sheet dan resource Godot 4 dari file .pfx
-node tools/cli.js export examples/knight.pfx --godot --out output/
-
-# Ekspor format PNG urutan frame dengan skala 2x
-node tools/cli.js export examples/knight.pfx --png --scale 2 --out output/
-```
+The test suite validates:
+- Bresenham lines, symmetric ellipses, iterative scanline flood fills.
+- Nearest-neighbor scaling, RotSprite, xBRZ 2x, 47-tile autotiling bitmasks, tangent-space 2D normal maps.
+- Blend mode math, clipping mask alpha isolation, and group opacity compositing.
+- State history (byte-diff reversibility, structural undo/redo, timeline jumping).
+- Pure JS encoders: PNG bitstreams, LZW GIF compression, ZIP headers, and CRC-32 validity.
+- Sprite sheet layout engines: border extrude, deduplication, power-of-two padding, and transparent trimming.
+- Game engine exporters: Godot `.tres`, Unity JSON, Aseprite JSON, TexturePacker JSON, and palette parsers (`.gpl`, `.hex`, `.pal`).
+- All 70 procedural game templates: cel population, layer integrity, and slice metadata.
 
 ---
 
-## 📁 Panduan Integrasi Game Engine
+## License
 
-- [Panduan Godot 4.x (SpriteFrames & TileSet)](docs/GODOT.md)
-- [Panduan Unity (Texture Settings & 9-Slice)](docs/UNITY.md)
-- [Panduan GameMaker (Strip Import)](docs/GAMEMAKER.md)
-- [Spesifikasi Format Berkas .pfx](docs/FILE_FORMAT.md)
-- [Arsitektur Perangkat Lunak](docs/ARCHITECTURE.md)
-- [Daftar Pengujian Manual](docs/MANUAL_TESTS.md)
-
----
-
-## ⚠️ Batasan yang Diketahui (Known Limitations)
-
-1. **Format GIF Import**: Parser GIF eksperimental saat ini memfokuskan ekstraksi frame utuh dan mengabaikan mode disposal non-standar. Disarankan mengimpor urutan PNG atau sprite sheet untuk animasi kompleks.
-2. **Kustom Font Bitmap**: Alat teks menyertakan 3 font bawaan (5x7, 8x8 bold, dan serif kecil). Penggunaan font kustom saat ini memerlukan lembar PNG bitmap font.
-3. **Penyimpanan Lokal**: Autosave bergantung pada IndexedDB lokal browser. Menghapus data penjelajahan (Clear Browsing Data) dapat menghapus cache autosave lokal. Selalu simpan cadangan file `.pfx` di penyimpanan berkas komputer Anda.
-
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
