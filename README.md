@@ -202,3 +202,56 @@ The test suite validates:
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
+## Architecture
+
+```
+PembuatKarakterPixel/
+├── docs/                   # Engine integration guides & specs
+│   ├── ARCHITECTURE.md     # Full architectural documentation
+│   ├── FILE_FORMAT.md      # .pfx schema specification
+│   ├── GODOT.md            # Godot 4.x SpriteFrames guide
+│   ├── UNITY.md            # Unity 9-slice and sprite guide
+│   └── GAMEMAKER.md        # GameMaker strip guide
+├── src/
+│   ├── core/               # PixelDocument model, history, compositor
+│   │   ├── templates/      # 70 modular game asset templates
+│   │   ├── compositor.js   # Blend modes, clipping masks, layer tree
+│   │   ├── history.js      # Memory-capped command stack + byte diffs
+│   │   └── document.js     # Frames, cels, layers, tags, metadata
+│   ├── tools/              # Raster algorithms (Bresenham, flood fill, etc.)
+│   ├── io/                 # Native pure JS encoders (PNG, GIF, ZIP, PFX)
+│   ├── render/             # Canvas viewport, checkerboard, onion skin
+│   ├── components/         # Clean React 19 UI panels
+│   └── App.jsx             # Main application orchestrator
+├── tools/
+│   └── cli.js              # Headless CLI exporter (Node.js)
+└── tests/                  # 58 zero-dependency unit tests
+```
+
+---
+
+## Testing
+
+PixelForge maintains an internal, dependency-free test runner (`tests/run.js`) to guarantee deterministic pixel math across environments:
+
+```bash
+npm test
+```
+
+The test suite validates:
+- Bresenham lines, symmetric ellipses, iterative scanline flood fills.
+- Nearest-neighbor scaling, RotSprite, xBRZ 2x, 47-tile autotiling bitmasks, tangent-space 2D normal maps.
+- Blend mode math, clipping mask alpha isolation, and group opacity compositing.
+- State history (byte-diff reversibility, structural undo/redo, timeline jumping).
+- Pure JS encoders: PNG bitstreams, LZW GIF compression, ZIP headers, and CRC-32 validity.
+- Sprite sheet layout engines: border extrude, deduplication, power-of-two padding, and transparent trimming.
+- Game engine exporters: Godot `.tres`, Unity JSON, Aseprite JSON, TexturePacker JSON, and palette parsers (`.gpl`, `.hex`, `.pal`).
+- All 70 procedural game templates: cel population, layer integrity, and slice metadata.
+
+---
+
+## License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
