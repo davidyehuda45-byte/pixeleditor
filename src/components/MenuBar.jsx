@@ -8,7 +8,7 @@ import { LANGUAGES } from '../i18n.js';
 const MENUS = [
   {
     id: 'file', labelKey: 'menu.file', items: [
-      'file.new', 'file.open', '-', 'file.save', 'file.saveAs', 'file.saveCopy', '-',
+      'file.new', 'file.newTemplate', 'file.open', '-', 'file.save', 'file.saveAs', 'file.saveCopy', '-',
       'file.importImage', 'file.importPalette', '-', 'file.export', '-', 'file.close', 'file.closeAll',
     ],
   },

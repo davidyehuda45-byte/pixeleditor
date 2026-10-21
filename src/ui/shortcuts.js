@@ -24,6 +24,7 @@ const toolActions = ALL_TOOLS.map((tool) => ({
 
 const actionActions = [
   { id: 'file.new', labelKey: 'menu.new', category: 'file', default: 'Ctrl+N' },
+  { id: 'file.newTemplate', labelKey: 'menu.newTemplate', category: 'file', default: 'Ctrl+Shift+N' },
   { id: 'file.open', labelKey: 'menu.open', category: 'file', default: 'Ctrl+O' },
   { id: 'file.save', labelKey: 'menu.save', category: 'file', default: 'Ctrl+S' },
   { id: 'file.saveAs', labelKey: 'menu.saveAs', category: 'file', default: 'Ctrl+Shift+S' },

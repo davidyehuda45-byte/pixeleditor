@@ -157,3 +157,4 @@ export function QuickGuideDialog({ onClose }) {
     </Modal>
   );
 }
+

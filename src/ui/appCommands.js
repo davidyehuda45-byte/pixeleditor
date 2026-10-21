@@ -56,7 +56,8 @@ export function buildCommands({ store, engine, viewport, run }) {
   }
 
   // ---- File --------------------------------------------------------------
-  add('file.new', 'menu.new', 'file', 'file-plus', () => store.setDialog({ type: 'new' }), { enabled: () => true });
+  add('file.new', 'menu.new', 'file', 'file-plus', () => store.setDialog({ type: 'new', tab: 'blank' }), { enabled: () => true });
+  add('file.newTemplate', 'menu.newTemplate', 'file', 'sparkles', () => store.setDialog({ type: 'new', tab: 'templates' }), { enabled: () => true });
   add('file.open', 'menu.open', 'file', 'folder-open', () => store.setDialog({ type: 'open' }), { enabled: () => true });
   add('file.save', 'menu.save', 'file', 'save', () => saveProject(store));
   add('file.saveAs', 'menu.saveAs', 'file', 'save-as', () => saveProject(store, { saveAs: true }));

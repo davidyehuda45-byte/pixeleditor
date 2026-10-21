@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n, useStore } from '../../ui/hooks.jsx';
-import { Modal, DialogSection, InfoNote, FormGrid } from './Modal.jsx';
+import { Modal, DialogSection, InfoNote, FormGrid, DialogTabs } from './Modal.jsx';
 import { Button, Field, Select, NumberInput, Toggle, Segmented, EmptyState, Spinner } from '../../ui/controls.jsx';
 import { Icon } from '../Icon.jsx';
 import {
@@ -11,6 +11,7 @@ import { parseProject } from '../../io/project.js';
 import { listAutosaves, deleteAutosave } from '../../io/autosave.js';
 import { pickFiles, downloadSingle, downloadFiles } from '../../io/file.js';
 import { EXAMPLES, loadExample, buildExample } from '../../examples.js';
+import { GAME_TEMPLATES, TEMPLATE_CATEGORIES, buildTemplate, loadGameTemplate } from '../../core/templates.js';
 import { renderComposite } from '../../core/compositor.js';
 import { exportDocument, zipExportedFiles } from '../../io/export.js';
 
@@ -49,9 +50,46 @@ function MiniChecker({ width = 64, height = 64, color = '#7c6cf5' }) {
   );
 }
 
+function TemplateThumb({ id }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    try {
+      const doc = buildTemplate(id);
+      if (!doc || cancelled) return;
+      const composite = renderComposite(doc, doc.frames[0].id);
+      const canvas = ref.current;
+      if (!canvas) return;
+      canvas.width = 56;
+      canvas.height = 56;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      const temp = document.createElement('canvas');
+      temp.width = composite.width;
+      temp.height = composite.height;
+      const tctx = temp.getContext('2d');
+      const img = tctx.createImageData(composite.width, composite.height);
+      img.data.set(composite.data);
+      tctx.putImageData(img, 0, 0);
+      const scale = Math.max(1, Math.floor(Math.min(52 / composite.width, 52 / composite.height)));
+      const dw = composite.width * scale;
+      const dh = composite.height * scale;
+      const dx = Math.floor((56 - dw) / 2);
+      const dy = Math.floor((56 - dh) / 2);
+      ctx.clearRect(0, 0, 56, 56);
+      ctx.drawImage(temp, dx, dy, dw, dh);
+    } catch {}
+    return () => { cancelled = true; };
+  }, [id]);
+  return <canvas ref={ref} className="template-thumb-canvas" width={56} height={56} style={{ imageRendering: 'pixelated' }} />;
+}
+
 export function NewDialog({ onClose }) {
   const store = useStore();
   const { t } = useI18n();
+  const [mainTab, setMainTab] = useState(store.dialog?.tab || 'templates');
+  const [catFilter, setCatFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [preset, setPreset] = useState('sprite');
   const [width, setWidth] = useState(32);
   const [height, setHeight] = useState(32);
@@ -66,7 +104,7 @@ export function NewDialog({ onClose }) {
     if (match) { setWidth(match.w); setHeight(match.h); }
   };
 
-  const create = () => {
+  const createBlank = () => {
     const w = Math.round(Number(width));
     const h = Math.round(Number(height));
     if (!Number.isFinite(w) || !Number.isFinite(h) || w < 1 || h < 1 || w > 1024 || h > 1024) {
@@ -83,96 +121,213 @@ export function NewDialog({ onClose }) {
     onClose();
   };
 
+  const useTemplate = (templateId) => {
+    loadGameTemplate(store, templateId);
+    onClose();
+  };
+
+  const filteredTemplates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return GAME_TEMPLATES.filter((tpl) => {
+      if (catFilter !== 'all' && tpl.cat !== catFilter) return false;
+      if (!q) return true;
+      const titleText = (t(tpl.titleKey) || '').toLowerCase();
+      const descText = (t(tpl.descKey) || '').toLowerCase();
+      return titleText.includes(q) || descText.includes(q) || tpl.id.includes(q);
+    });
+  }, [catFilter, search, t]);
+
+  const navTabs = [
+    { value: 'templates', label: `${t('dialog.new.tabTemplates')} (${GAME_TEMPLATES.length})`, icon: 'sparkles' },
+    { value: 'blank', label: t('dialog.new.tabBlank'), icon: 'file-plus' },
+  ];
+
   return (
     <Modal
       title={t('dialog.new.title')}
       subtitle={t('dialog.new.subtitle')}
       icon="file-plus"
       onClose={onClose}
-      size="lg"
+      size="xl"
+      className="new-doc-modal"
       footer={(
         <>
-          <span className="modal-footer-note">{t('dialog.new.description')}</span>
+          <span className="modal-footer-note">
+            {mainTab === 'templates' ? t('template.footerNote') : t('dialog.new.description')}
+          </span>
           <Button variant="ghost" onClick={onClose}>{t('common.cancel')}</Button>
-          <Button variant="primary" icon="file-plus" onClick={create}>{t('dialog.new.create')}</Button>
+          {mainTab === 'blank' ? (
+            <Button variant="primary" icon="file-plus" onClick={createBlank}>{t('dialog.new.create')}</Button>
+          ) : null}
         </>
       )}
     >
-      <div className="new-doc-layout">
-        <div className="new-doc-form">
-          <DialogSection title={t('dialog.new.preset')}>
-            <div className="preset-grid">
-              {NEW_PRESETS.map((item) => (
+      <DialogTabs tabs={navTabs} value={mainTab} onChange={setMainTab} />
+
+      {mainTab === 'templates' ? (
+        <div className="template-browser" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <div className="segmented" style={{ flexWrap: 'wrap', gap: 2 }}>
+              {TEMPLATE_CATEGORIES.map((c) => (
                 <button
-                  key={item.id}
+                  key={c.id}
                   type="button"
-                  className={`preset-card ${preset === item.id ? 'is-active' : ''}`}
-                  onClick={() => choosePreset(item.id)}
+                  className={catFilter === c.id ? 'is-active' : ''}
+                  onClick={() => setCatFilter(c.id)}
+                  style={{ fontSize: 11, padding: '3px 8px' }}
                 >
-                  <MiniChecker width={item.w} height={item.h} color={item.id === 'font' ? '#7c6cf5' : '#e4c36b'} />
-                  <span>{t(`dialog.new.presets.${item.id}`)}</span>
-                  <em>{item.w}×{item.h}</em>
+                  {t(c.labelKey)}
                 </button>
               ))}
-              <button
-                type="button"
-                className={`preset-card preset-custom ${preset === 'custom' ? 'is-active' : ''}`}
-                onClick={() => setPreset('custom')}
-              >
-                <span className="preset-plus">+</span>
-                <span>{t('dialog.new.custom')}</span>
-                <em>{t('common.custom')}</em>
-              </button>
             </div>
-          </DialogSection>
-          <FormGrid>
-            <Field label={t('dialog.new.width')}>
-              <NumberInput value={width} min={1} max={1024} onChange={(value) => { setWidth(value); setPreset('custom'); }} />
-            </Field>
-            <Field label={t('dialog.new.height')}>
-              <NumberInput value={height} min={1} max={1024} onChange={(value) => { setHeight(value); setPreset('custom'); }} />
-            </Field>
-            <Field label={t('dialog.new.titleField')} className="span-2">
-              <input className="text-input" value={title} placeholder={t('common.untitled')} onChange={(event) => setTitle(event.target.value)} maxLength={80} />
-            </Field>
-            <Field label={t('dialog.new.background')}>
-              <Segmented
-                value={background}
-                onChange={setBackground}
-                options={[
-                  { value: 'transparent', label: t('dialog.new.transparent') },
-                  { value: 'solid', label: t('dialog.new.color') },
-                ]}
+            <div style={{ marginLeft: 'auto', minWidth: 200 }}>
+              <input
+                type="search"
+                className="text-input"
+                placeholder={t('template.searchPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ height: 28, fontSize: 11.5 }}
               />
-            </Field>
-            <Field label={t('dialog.new.grid')} hint={t('dialog.new.max')}>
-              <Select
-                value={String(grid)}
-                onChange={(value) => setGrid(Number(value))}
-                options={[
-                  { value: '0', label: t('common.off') },
-                  { value: '1', label: '1×1' },
-                  { value: '2', label: '2×2' },
-                  { value: '4', label: '4×4' },
-                  { value: '8', label: '8×8' },
-                  { value: '16', label: '16×16' },
-                ]}
-              />
-            </Field>
-          </FormGrid>
-          {error ? <InfoNote tone="error" icon="warning">{error}</InfoNote> : null}
+            </div>
+          </div>
+
+          <div
+            className="template-grid"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: 10,
+              maxHeight: 'min(58vh, 560px)',
+              overflowY: 'auto',
+              paddingRight: 4,
+            }}
+          >
+            {filteredTemplates.map((tpl) => (
+              <div
+                key={tpl.id}
+                className="template-card"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: 10,
+                  border: '1px solid var(--line)',
+                  borderRadius: 8,
+                  background: 'var(--bg-2)',
+                  transition: 'border-color 140ms ease, background 140ms ease',
+                }}
+              >
+                <div style={{ width: 56, height: 56, borderRadius: 6, background: 'var(--bg-1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--line-soft)' }}>
+                  <TemplateThumb id={tpl.id} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <strong style={{ fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {t(tpl.titleKey)}
+                    </strong>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--muted)', lineHeight: 1.3, maxHeight: 30, overflow: 'hidden' }}>
+                    {t(tpl.descKey)}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                    <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', background: 'var(--bg-3)', padding: '1px 5px', borderRadius: 3, color: 'var(--text-soft)' }}>
+                      {tpl.w}×{tpl.h} px
+                    </span>
+                    <span style={{ fontSize: 10, background: 'var(--accent-dim)', color: 'var(--accent-soft)', padding: '1px 5px', borderRadius: 3 }}>
+                      {tpl.frames} frame
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => useTemplate(tpl.id)}
+                      style={{ marginLeft: 'auto', height: 24, fontSize: 10.5, padding: '0 8px' }}
+                    >
+                      {t('template.useAndEdit')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <aside className="new-doc-aside">
-          <div className="new-doc-preview-wrap">
-            <MiniChecker width={width} height={height} color={background === 'solid' ? store.ui.primary : '#e4c36b'} />
+      ) : (
+        <div className="new-doc-layout">
+          <div className="new-doc-form">
+            <DialogSection title={t('dialog.new.preset')}>
+              <div className="preset-grid">
+                {NEW_PRESETS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`preset-card ${preset === item.id ? 'is-active' : ''}`}
+                    onClick={() => choosePreset(item.id)}
+                  >
+                    <MiniChecker width={item.w} height={item.h} color={item.id === 'font' ? '#7c6cf5' : '#e4c36b'} />
+                    <span>{t(`dialog.new.presets.${item.id}`)}</span>
+                    <em>{item.w}×{item.h}</em>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className={`preset-card preset-custom ${preset === 'custom' ? 'is-active' : ''}`}
+                  onClick={() => setPreset('custom')}
+                >
+                  <span className="preset-plus">+</span>
+                  <span>{t('dialog.new.custom')}</span>
+                  <em>{t('common.custom')}</em>
+                </button>
+              </div>
+            </DialogSection>
+            <FormGrid>
+              <Field label={t('dialog.new.width')}>
+                <NumberInput value={width} min={1} max={1024} onChange={(value) => { setWidth(value); setPreset('custom'); }} />
+              </Field>
+              <Field label={t('dialog.new.height')}>
+                <NumberInput value={height} min={1} max={1024} onChange={(value) => { setHeight(value); setPreset('custom'); }} />
+              </Field>
+              <Field label={t('dialog.new.titleField')} className="span-2">
+                <input className="text-input" value={title} placeholder={t('common.untitled')} onChange={(event) => setTitle(event.target.value)} maxLength={80} />
+              </Field>
+              <Field label={t('dialog.new.background')}>
+                <Segmented
+                  value={background}
+                  onChange={setBackground}
+                  options={[
+                    { value: 'transparent', label: t('dialog.new.transparent') },
+                    { value: 'solid', label: t('dialog.new.color') },
+                  ]}
+                />
+              </Field>
+              <Field label={t('dialog.new.grid')} hint={t('dialog.new.max')}>
+                <Select
+                  value={String(grid)}
+                  onChange={(value) => setGrid(Number(value))}
+                  options={[
+                    { value: '0', label: t('common.off') },
+                    { value: '1', label: '1×1' },
+                    { value: '2', label: '2×2' },
+                    { value: '4', label: '4×4' },
+                    { value: '8', label: '8×8' },
+                    { value: '16', label: '16×16' },
+                  ]}
+                />
+              </Field>
+            </FormGrid>
+            {error ? <InfoNote tone="error" icon="warning">{error}</InfoNote> : null}
           </div>
-          <div className="new-doc-stats">
-            <span><strong>{width} × {height}</strong> px</span>
-            <span>{Math.max(1, Math.round(width * height / 1024))}K piksel</span>
-            <span>{background === 'solid' ? t('dialog.new.color') : t('dialog.new.transparent')}</span>
-          </div>
-        </aside>
-      </div>
+          <aside className="new-doc-aside">
+            <div className="new-doc-preview-wrap">
+              <MiniChecker width={width} height={height} color={background === 'solid' ? store.ui.primary : '#e4c36b'} />
+            </div>
+            <div className="new-doc-stats">
+              <span><strong>{width} × {height}</strong> px</span>
+              <span>{Math.max(1, Math.round(width * height / 1024))}K piksel</span>
+              <span>{background === 'solid' ? t('dialog.new.color') : t('dialog.new.transparent')}</span>
+            </div>
+          </aside>
+        </div>
+      )}
     </Modal>
   );
 }

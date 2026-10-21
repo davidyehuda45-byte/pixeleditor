@@ -12,6 +12,7 @@ import { sheetTests } from './spritesheet.test.js';
 import { exporterTests } from './exporters.test.js';
 import { toolTests } from './tools.test.js';
 import { cliTests } from './cli.test.js';
+import { templateTests } from './templates.test.js';
 
 const suites = [
   ['raster', rasterTests],
@@ -24,6 +25,7 @@ const suites = [
   ['exporters', exporterTests],
   ['tools', toolTests],
   ['cli', cliTests],
+  ['templates', templateTests],
 ];
 
 let passed = 0, failed = 0;
