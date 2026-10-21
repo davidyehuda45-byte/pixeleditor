@@ -3,9 +3,9 @@ import { GAME_TEMPLATES, TEMPLATE_CATEGORIES, buildTemplate } from '../src/core/
 
 export const templateTests = [
   {
-    name: 'template catalog defines exactly 42 game templates across 7 categories',
+    name: 'template catalog defines exactly 70 game templates across 7 categories',
     fn() {
-      assert.equal(GAME_TEMPLATES.length, 42, 'Must have exactly 42 game templates');
+      assert.equal(GAME_TEMPLATES.length, 70, 'Must have exactly 70 game templates');
       assert.equal(TEMPLATE_CATEGORIES.length, 8, 'Must have 8 category options (all + 7 cats)');
       for (const tpl of GAME_TEMPLATES) {
         assert.ok(tpl.id, 'Template must have an id');
@@ -16,7 +16,7 @@ export const templateTests = [
     },
   },
   {
-    name: 'all 42 templates build valid PixelDocuments with populated cels and layers',
+    name: 'all 70 templates build valid PixelDocuments with populated cels and layers',
     fn() {
       for (const tpl of GAME_TEMPLATES) {
         const doc = buildTemplate(tpl.id);
@@ -45,6 +45,11 @@ export const templateTests = [
       assert.ok(knight.tags.some((t) => t.name === 'walk'), 'Knight must have walk tag');
       assert.ok(knight.slices.some((s) => s.name === 'hitbox'), 'Knight must have hitbox slice');
       assert.ok(knight.anchors.some((a) => a.name === 'weapon_hand'), 'Knight must have weapon anchor');
+
+      const dragon = buildTemplate('char-dragon');
+      assert.equal(dragon.width, 48);
+      assert.equal(dragon.height, 48);
+      assert.ok(dragon.tags.some((t) => t.name === 'hover'), 'Dragon must have hover tag');
     },
   },
   {
