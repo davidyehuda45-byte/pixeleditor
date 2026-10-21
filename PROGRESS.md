@@ -16,7 +16,7 @@ Dokumen pelacak status implementasi setiap milestone (M1–M9) dan catatan keput
 | **M6** | Ekspor: PNG, sprite sheet, Aseprite JSON, GIF, Godot 4 .tres, Unity, TexturePacker, ZIP | **SELESAI** | Pipeline ekspor murni tanpa DOM, border extrude untuk anti-bleeding |
 | **M7** | Impor, .pfx simpan/buka/migrasi, autosave & recovery IndexedDB, tab multi-dokumen, slices/hitbox/anchors | **SELESAI** | Serialisasi RLE Base64 lossless, crash recovery modal |
 | **M8** | Palet lanjutan (GPL, HEX, PAL), indexed color mode, kuantisasi gambar, command palette (`Ctrl+K`), i18n ID/EN, PWA | **SELESAI** | Kamus lengkap Bahasa Indonesia & English, PWA manifest & Service Worker |
-| **M9** | Polishing UI, keyboard shortcuts, aksesibilitas, 51 unit test, dokumentasi lengkap, CLI headless | **SELESAI** | `tests/run.js` lulus 51 test, CLI `tools/cli.js` berfungsi penuh |
+| **M9** | Polishing UI, keyboard shortcuts, aksesibilitas, 58 unit test, dokumentasi lengkap, CLI headless, 70 templat game 2D | **SELESAI** | `tests/run.js` lulus 58 test, CLI `tools/cli.js` berfungsi penuh, 70 templat modular terverifikasi |
 
 ---
 

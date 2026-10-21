@@ -39,6 +39,9 @@ PixelForge adalah aplikasi web editor pixel art dan animasi sprite tingkat produ
   - **GameMaker**: Format horizontal strip dengan penomoran frame otomatis.
   - Format gambar: PNG transparan, GIF animasi (LZW lokal), dan urutan PNG dalam berkas ZIP.
   - Opsi Sprite Sheet: layout horizontal, vertikal, grid, trim transparan, deduplikasi frame identik, dan **border extrude** (mencegah bleeding tekstur saat kamera bergerak).
+- **Pustaka 70 Templat Game 2D**:
+  - Pustaka templat bawaan siap pakai (`Ctrl+Shift+N`) yang terbagi dalam 7 kategori esensial: Karakter & Monster, Bangunan RPG, Senjata, Item & Loot, Tileset 16×16, Efek Visual (FX), dan UI Retro 9-Slice.
+  - Setiap templat dilengkapi pemisahan multi-layer independen, frame animasi, tag, dan metadata collision/anchor yang siap dikustomisasi.
 - **Headless CLI**:
   - Ekspor berkas `.pfx` tanpa browser menggunakan `node tools/cli.js`.
 - **PWA & Aksesibilitas**:
@@ -106,7 +109,7 @@ Hasil build mandiri akan tersimpan di folder `dist/` dan siap disajikan lewat we
 ```bash
 npm test
 ```
-Menjalankan 51 unit test mandiri tanpa framework eksternal.
+Menjalankan 58 unit test mandiri tanpa framework eksternal.
 
 ### Menggunakan CLI Headless
 ```bash
