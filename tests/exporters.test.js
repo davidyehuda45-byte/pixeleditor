@@ -111,4 +111,26 @@ export const exporterTests = [
       assert.equal(png.files[0].data[1], 0x50);
     },
   },
+  {
+    name: 'Phaser, Raylib, and Love2D exporters generate valid engine data',
+    async fn() {
+      const doc = makeDoc();
+      const result = await exportDocument(doc, {
+        format: 'sheet', scope: 'all', baseName: 'hero', scale: 1, layout: 'horizontal',
+      });
+      const names = result.files.map((f) => f.name);
+      assert.ok(names.includes('hero_phaser.json'), 'Phaser JSON must be generated');
+      assert.ok(names.includes('hero_raylib.h'), 'Raylib C header must be generated');
+      assert.ok(names.includes('hero_love2d.lua'), 'Love2D Lua script must be generated');
+
+      const raylibFile = result.files.find(f => f.name === 'hero_raylib.h');
+      const raylibCode = new TextDecoder().decode(raylibFile.data);
+      assert.ok(raylibCode.includes('static const Rectangle hero_rects[2]'));
+      assert.ok(raylibCode.includes('#define HERO_ANIM_IDLE_FROM 0'));
+
+      const loveFile = result.files.find(f => f.name === 'hero_love2d.lua');
+      const loveCode = new TextDecoder().decode(loveFile.data);
+      assert.ok(loveCode.includes('love.graphics.newQuad(0, 0, 4, 4, 8, 4)'));
+    },
+  },
 ];

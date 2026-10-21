@@ -8,6 +8,9 @@ import { encodeGIF } from './gif.js';
 import { buildSpriteSheet } from './spritesheet.js';
 import { buildAsepriteJSON, buildTexturePackerJSON, buildUnitySlices } from './exporters/aseprite.js';
 import { buildGodotSpriteFrames } from './exporters/godot.js';
+import { buildPhaserAtlas } from './exporters/phaser.js';
+import { buildRaylibHeader } from './exporters/raylib.js';
+import { buildLove2DAtlas } from './exporters/love2d.js';
 import { createZip } from './zip.js';
 import { scaleRGBA } from './png.js';
 
@@ -188,7 +191,7 @@ export async function exportDocument(doc, opts = {}, hooks = {}) {
   onProgress?.(60, 'Membuat PNG sheet');
 
   const effectiveTags = opts.frameTags ? tags : tags;
-  if (format === 'sheet' || format === 'json' || format === 'godot') {
+  if (format === 'sheet' || format === 'json' || format === 'godot' || format === 'phaser' || format === 'raylib' || format === 'love2d') {
     const aseprite = buildAsepriteJSON(sheet, doc, {
       imageName, baseName, scale, variant: opts.jsonVariant || 'array', frameTags: effectiveTags,
     });
@@ -197,6 +200,18 @@ export async function exportDocument(doc, opts = {}, hooks = {}) {
     files.push({ name: makeName('_texturepacker.json'), data: encoder.encode(JSON.stringify(tp, null, 2)), type: 'application/json' });
     const unity = buildUnitySlices(sheet, doc, { imageName, baseName, ppu: opts.ppu || 16 });
     files.push({ name: makeName('_unity.json'), data: encoder.encode(JSON.stringify(unity, null, 2)), type: 'application/json' });
+
+    // Phaser 3 Texture Atlas
+    const phaser = buildPhaserAtlas(sheet, imageName, { baseName, tags: effectiveTags });
+    files.push({ name: makeName('_phaser.json'), data: encoder.encode(phaser.jsonContent), type: 'application/json' });
+
+    // Raylib C header
+    const raylibHeader = buildRaylibHeader(sheet, imageName, { baseName, tags: effectiveTags });
+    files.push({ name: makeName('_raylib.h'), data: encoder.encode(raylibHeader), type: 'text/plain' });
+
+    // Love2D Lua script
+    const love2dScript = buildLove2DAtlas(sheet, imageName, { baseName, tags: effectiveTags });
+    files.push({ name: makeName('_love2d.lua'), data: encoder.encode(love2dScript), type: 'text/plain' });
   }
   if (format === 'godot') {
     onProgress?.(70, 'Membuat .tres Godot');

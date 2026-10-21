@@ -13,6 +13,7 @@ import { exporterTests } from './exporters.test.js';
 import { toolTests } from './tools.test.js';
 import { cliTests } from './cli.test.js';
 import { templateTests } from './templates.test.js';
+import { biomeTests } from './biome.test.js';
 
 const suites = [
   ['raster', rasterTests],
@@ -26,6 +27,7 @@ const suites = [
   ['tools', toolTests],
   ['cli', cliTests],
   ['templates', templateTests],
+  ['biome', biomeTests],
 ];
 
 let passed = 0, failed = 0;

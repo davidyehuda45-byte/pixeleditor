@@ -38,14 +38,14 @@ const MENUS = [
   {
     id: 'canvas', labelKey: 'menu.canvas', items: [
       'canvas.resize', 'canvas.cropSelection', 'canvas.trim', '-', 'canvas.flipH', 'canvas.flipV', '-',
-      'canvas.rotate90', 'canvas.rotate180', 'canvas.rotate270', '-', 'canvas.grid', 'canvas.guides',
+      'canvas.rotate90', 'canvas.rotate180', 'canvas.rotate270', '-', 'canvas.biome', 'canvas.effects', 'canvas.adjust', '-', 'canvas.grid', 'canvas.guides',
       'canvas.palette', 'canvas.metadata', 'canvas.rename', '-', 'canvas.minimap',
     ],
   },
   {
     id: 'view', labelKey: 'menu.view', items: [
       'view.zoomIn', 'view.zoomOut', 'view.fit', 'view.actual', 'view.center', '-',
-      'view.grid', 'view.guides', 'view.onion', '-', 'view.timeline', 'view.rightPanel', 'view.preview', 'view.zen', '-',
+      'view.grid', 'view.guides', 'view.onion', '-', 'view.timeline', 'view.rightPanel', 'view.preview', 'view.playtest', 'view.zen', '-',
       { type: 'themes' }, { type: 'languages' }, '-', 'view.fullscreen',
     ],
   },
@@ -183,6 +183,16 @@ export function MenuBar({ commands, commandMap, runCommand, viewport }) {
         ))}
       </nav>
       <div className="menubar-tail">
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost playtest-btn"
+          onClick={() => store.setDialog({ type: 'playtest' })}
+          title={t('playtest.title')}
+          style={{ gap: 5, fontWeight: 600, color: '#58c896', background: 'rgba(88, 200, 150, 0.12)', border: '1px solid rgba(88, 200, 150, 0.4)', height: 26, padding: '0 8px', borderRadius: 4 }}
+        >
+          <Icon name="play" size={12} />
+          <span>{t('playtest.short')}</span>
+        </button>
         <button
           type="button"
           className="btn btn-sm btn-ghost guide-btn"

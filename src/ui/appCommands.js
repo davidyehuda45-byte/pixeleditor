@@ -172,6 +172,7 @@ export function buildCommands({ store, engine, viewport, run }) {
   add('canvas.rotate180', 'menu.rotate180', 'canvas', 'refresh', () => rotateDocument(store, 180));
   add('canvas.rotate270', 'menu.rotate270', 'canvas', 'rotate-ccw', () => rotateDocument(store, 270));
   add('canvas.effects', 'menu.effects', 'canvas', 'sparkles', () => store.setDialog({ type: 'effects' }));
+  add('canvas.biome', 'biome.title', 'canvas', 'sparkles', () => store.setDialog({ type: 'biome' }), { enabled: activeDoc });
   add('canvas.adjust', 'menu.adjust', 'canvas', 'droplet', () => store.setDialog({ type: 'effects', initial: 'adjust' }));
   add('canvas.grid', 'viewport.grid', 'canvas', 'grid', () => store.setDialog({ type: 'grid' }));
   add('canvas.metadata', 'dialog.metadata.title', 'canvas', 'box', () => store.setDialog({ type: 'metadata' }));
@@ -195,6 +196,7 @@ export function buildCommands({ store, engine, viewport, run }) {
   add('view.timeline', 'menu.timeline', 'view', 'panel-bottom', toggleUI('showTimeline'), { checked: () => !!store.ui.showTimeline });
   add('view.rightPanel', 'menu.rightPanel', 'view', 'panel-right', toggleUI('showRightPanel'), { checked: () => !!store.ui.showRightPanel });
   add('view.preview', 'menu.preview', 'view', 'eye', toggleUI('showPreview'), { checked: () => !!store.ui.showPreview });
+  add('view.playtest', 'playtest.title', 'view', 'play', () => store.setDialog({ type: 'playtest' }), { enabled: activeDoc });
   add('view.zen', 'menu.zen', 'view', 'maximize', toggleUI('zen'), { checked: () => !!store.ui.zen });
   add('view.fullscreen', 'common.fullscreen', 'view', 'maximize', async () => {
     try {

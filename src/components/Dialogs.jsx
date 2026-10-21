@@ -12,6 +12,8 @@ import {
 } from './dialogs/DocumentDialogs.jsx';
 import { PaletteDialog, ExtractPaletteDialog, MetadataDialog } from './dialogs/PaletteDialogs.jsx';
 import { TextDialog } from './dialogs/TextDialog.jsx';
+import { BiomeDialog } from './dialogs/BiomeDialog.jsx';
+import { PlaytestDialog } from './dialogs/PlaytestDialog.jsx';
 
 /** Renders the single active modal. The store owns the dialog descriptor. */
 export function DialogHost() {
@@ -72,6 +74,10 @@ export function DialogHost() {
       return <MetadataDialog onClose={close} />;
     case 'text':
       return <TextDialog x={dialog.x} y={dialog.y} layerId={dialog.layerId} onClose={close} />;
+    case 'biome':
+      return <BiomeDialog onClose={close} />;
+    case 'playtest':
+      return <PlaytestDialog onClose={close} />;
     default:
       return null;
   }

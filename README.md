@@ -1,13 +1,13 @@
 # PixelForge
 
-A browser-native, offline-first pixel art editor and sprite animation studio engineered for 2D game pipelines. Built with zero UI framework bloat, hard-pixel raster guarantees, pure JavaScript media encoders, and direct export targets for Godot 4, Unity, Aseprite, and GameMaker.
+A browser-native, offline-first pixel art editor and sprite animation studio engineered for 2D game pipelines. Built with zero UI framework bloat, hard-pixel raster guarantees, pure JavaScript media encoders, interactive game playtest arena, and direct export targets for Godot 4, Unity, Aseprite, GameMaker, Phaser 3, Raylib, and Love2D.
 
 **[🚀 Launch Live Web App](https://davidyehuda45-byte.github.io/pixeleditor/)**
 
 [![Live Demo](https://img.shields.io/badge/Demo-Live%20App-ff4081.svg)](https://davidyehuda45-byte.github.io/pixeleditor/)
 [![CI](https://github.com/davidyehuda45-byte/pixeleditor/actions/workflows/ci.yml/badge.svg)](https://github.com/davidyehuda45-byte/pixeleditor/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 58 passed](https://img.shields.io/badge/Tests-58%20passed-brightgreen.svg)](#testing)
+[![Tests: 62 passed](https://img.shields.io/badge/Tests-62%20passed-brightgreen.svg)](#testing)
 [![Dependencies: 2](https://img.shields.io/badge/Dependencies-React%20%7C%20Vite-informational.svg)](package.json)
 [![Offline: PWA](https://img.shields.io/badge/Offline-PWA%20Ready-success.svg)](#architecture)
 
