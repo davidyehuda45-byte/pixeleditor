@@ -8,7 +8,7 @@ export function TabStrip() {
   const { t } = useI18n();
 
   return (
-    <div className="tab-strip" role="tablist" aria-label={t('app.name')}>
+    <div className={`tab-strip ${store.sessions.length <= 1 ? 'is-single' : ''}`} role="tablist" aria-label={t('app.name')}>
       <div className="tab-scroll">
         {store.sessions.map((session, index) => {
           const active = index === store.activeIndex;

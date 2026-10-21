@@ -71,3 +71,4 @@ this.load.atlas('${name}', '${imageFileName}', '${imageFileName.replace(/\.png$/
 
   return { jsonContent, loaderSnippet };
 }
+

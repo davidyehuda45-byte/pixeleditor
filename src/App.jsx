@@ -78,8 +78,10 @@ function AppShell({ store, engine }) {
     const onFocusColor = () => {
       if (window.innerWidth <= 768) setMobileDrawer('panel');
     };
+    const onOpenTools = () => { if (window.innerWidth <= 768) setMobileDrawer('tools'); };
     window.addEventListener('pixelforge:focus-color', onFocusColor);
-    return () => window.removeEventListener('pixelforge:focus-color', onFocusColor);
+    window.addEventListener('pixelforge:open-tools-drawer', onOpenTools);
+    return () => { window.removeEventListener('pixelforge:focus-color', onFocusColor); window.removeEventListener('pixelforge:open-tools-drawer', onOpenTools); };
   }, []);
 
   const commands = useMemo(() => buildCommands({
@@ -329,7 +331,7 @@ function AppShell({ store, engine }) {
   };
 
   return (
-    <div className={`app-shell ${ui.zen ? 'is-zen' : ''} ${ui.showRightPanel ? '' : 'no-right-panel'}`} style={layoutStyle} ref={rootRef}>
+    <div className={`app-shell ${ui.zen ? 'is-zen' : ''} ${ui.showRightPanel ? '' : 'no-right-panel'} ${store.sessions.length <= 1 ? 'has-single-tab' : ''}`} style={layoutStyle} ref={rootRef}>
       <MenuBar commands={commands} commandMap={commandMap} runCommand={runCommand} viewport={viewportRef} />
       {!ui.zen ? <TabStrip /> : null}
       <div className="workspace">

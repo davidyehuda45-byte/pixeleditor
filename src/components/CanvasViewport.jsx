@@ -4,8 +4,13 @@ import { renderComposite } from '../core/compositor.js';
 import { setDocumentProps } from '../core/commands.js';
 import { toHex } from '../utils/color.js';
 
-const RULER = 18;
+const DEFAULT_RULER = 18;
 const ZOOM_STEPS = [0.5, 1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64];
+
+function getRuler() {
+  if (typeof window !== 'undefined' && window.innerWidth <= 768) return 0;
+  return DEFAULT_RULER;
+}
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -74,20 +79,22 @@ export function CanvasViewport({ engine, apiRef }) {
 
   const layout = () => {
     const { width, height } = sizeRef.current;
-    const vw = Math.max(1, width - RULER);
-    const vh = Math.max(1, height - RULER);
-    return { width, height, vw, vh };
+    const r = getRuler();
+    const vw = Math.max(1, width - r);
+    const vh = Math.max(1, height - r);
+    return { width, height, vw, vh, ruler: r };
   };
 
   const docRect = () => {
-    if (!doc) return { x: RULER, y: RULER, w: 1, h: 1 };
+    const r = getRuler();
+    if (!doc) return { x: r, y: r, w: 1, h: 1 };
     const { vw, vh } = layout();
     const zoom = localRef.current.zoom;
     const w = doc.width * zoom;
     const h = doc.height * zoom;
     return {
-      x: RULER + vw / 2 + localRef.current.panX - w / 2,
-      y: RULER + vh / 2 + localRef.current.panY - h / 2,
+      x: r + vw / 2 + localRef.current.panX - w / 2,
+      y: r + vh / 2 + localRef.current.panY - h / 2,
       w, h,
     };
   };
@@ -162,12 +169,12 @@ export function CanvasViewport({ engine, apiRef }) {
   const zoomAtScreen = (screenX, screenY, newZoom) => {
     if (!doc) return;
     const z = clamp(newZoom, 0.5, 64);
-    const { vw, vh } = layout();
+    const { vw, vh, ruler: r } = layout();
     const before = screenToDoc(screenX, screenY).exactX;
     const beforeY = screenToDoc(screenX, screenY).exactY;
     localRef.current.zoom = z;
-    const px = screenX - RULER;
-    const py = screenY - RULER;
+    const px = screenX - r;
+    const py = screenY - r;
     localRef.current.panX = px - vw / 2 - (before - doc.width / 2) * z;
     localRef.current.panY = py - vh / 2 - (beforeY - doc.height / 2) * z;
     if (session) session.view.fitted = false;
@@ -180,7 +187,8 @@ export function CanvasViewport({ engine, apiRef }) {
     const direction = factor >= 1 ? 1 : -1;
     const target = nextZoom(localRef.current.zoom, direction);
     const { width, height } = sizeRef.current;
-    zoomAtScreen(RULER + (width - RULER) / 2, RULER + (height - RULER) / 2, target);
+    const r = getRuler();
+    zoomAtScreen(r + (width - r) / 2, r + (height - r) / 2, target);
   };
 
   apiRefLocal.current = { fit, actual, center, zoomBy, zoomAtScreen, screenToDoc, refresh: () => scheduleDraw(), getCompositePixels: () => compositeRef.current };
@@ -304,7 +312,7 @@ export function CanvasViewport({ engine, apiRef }) {
   const draw = () => {
     const ctx = ctxRef.current;
     if (!ctx) return;
-    const { width, height, vw, vh } = layout();
+    const { width, height, vw, vh, ruler: r } = layout();
     const theme = ui.theme;
     const colors = theme === 'light'
       ? { workspace: '#c9cbd4', ruler: '#eceef4', line: '#b4b8c6', text: '#5a5f72', border: '#32343e', guide: '#0b8fd4' }
@@ -316,16 +324,18 @@ export function CanvasViewport({ engine, apiRef }) {
     ctx.fillStyle = colors.workspace;
     ctx.fillRect(0, 0, width, height);
 
-    // Ruler background.
-    ctx.fillStyle = colors.ruler;
-    ctx.fillRect(0, 0, width, RULER);
-    ctx.fillRect(0, 0, RULER, height);
-    ctx.strokeStyle = colors.line;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, RULER - 0.5); ctx.lineTo(width, RULER - 0.5);
-    ctx.moveTo(RULER - 0.5, 0); ctx.lineTo(RULER - 0.5, height);
-    ctx.stroke();
+    // Ruler background (desktop only).
+    if (r > 0) {
+      ctx.fillStyle = colors.ruler;
+      ctx.fillRect(0, 0, width, r);
+      ctx.fillRect(0, 0, r, height);
+      ctx.strokeStyle = colors.line;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, r - 0.5); ctx.lineTo(width, r - 0.5);
+      ctx.moveTo(r - 0.5, 0); ctx.lineTo(r - 0.5, height);
+      ctx.stroke();
+    }
 
     if (!doc) {
       ctx.fillStyle = colors.text;
@@ -340,34 +350,36 @@ export function CanvasViewport({ engine, apiRef }) {
     const zoom = localRef.current.zoom;
     const docX = rect.x, docY = rect.y, docW = rect.w, docH = rect.h;
 
-    // Ruler ticks and labels.
-    const stepFor = (available, z) => {
-      const candidates = [1, 2, 4, 5, 8, 10, 16, 20, 32, 40, 50, 64, 100, 128, 200, 256, 512, 1024];
-      return candidates.find((s) => s * z >= 48) || 1024;
-    };
-    const stepX = stepFor(docW, zoom);
-    const stepY = stepFor(docH, zoom);
-    ctx.fillStyle = colors.text;
-    ctx.font = '9px ui-monospace, monospace';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    for (let x = 0; x <= doc.width; x += stepX) {
-      const sx = docX + x * zoom;
-      if (sx < RULER || sx > width) continue;
-      ctx.strokeStyle = colors.line;
-      ctx.beginPath(); ctx.moveTo(Math.round(sx) + 0.5, RULER - 5); ctx.lineTo(Math.round(sx) + 0.5, RULER); ctx.stroke();
-      if (x < doc.width) ctx.fillText(String(x), sx + (stepX * zoom) / 2, RULER / 2 + 1);
+    // Ruler ticks and labels (desktop only).
+    if (r > 0) {
+      const stepFor = (available, z) => {
+        const candidates = [1, 2, 4, 5, 8, 10, 16, 20, 32, 40, 50, 64, 100, 128, 200, 256, 512, 1024];
+        return candidates.find((s) => s * z >= 48) || 1024;
+      };
+      const stepX = stepFor(docW, zoom);
+      const stepY = stepFor(docH, zoom);
+      ctx.fillStyle = colors.text;
+      ctx.font = '9px ui-monospace, monospace';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      for (let x = 0; x <= doc.width; x += stepX) {
+        const sx = docX + x * zoom;
+        if (sx < r || sx > width) continue;
+        ctx.strokeStyle = colors.line;
+        ctx.beginPath(); ctx.moveTo(Math.round(sx) + 0.5, r - 5); ctx.lineTo(Math.round(sx) + 0.5, r); ctx.stroke();
+        if (x < doc.width) ctx.fillText(String(x), sx + (stepX * zoom) / 2, r / 2 + 1);
+      }
+      ctx.textAlign = 'right';
+      for (let y = 0; y <= doc.height; y += stepY) {
+        const sy = docY + y * zoom;
+        if (sy < r || sy > height) continue;
+        ctx.strokeStyle = colors.line;
+        ctx.beginPath(); ctx.moveTo(r - 5, Math.round(sy) + 0.5); ctx.lineTo(r, Math.round(sy) + 0.5); ctx.stroke();
+        if (y < doc.height) ctx.fillText(String(y), r - 2, sy + (stepY * zoom) / 2);
+      }
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
     }
-    ctx.textAlign = 'right';
-    for (let y = 0; y <= doc.height; y += stepY) {
-      const sy = docY + y * zoom;
-      if (sy < RULER || sy > height) continue;
-      ctx.strokeStyle = colors.line;
-      ctx.beginPath(); ctx.moveTo(RULER - 5, Math.round(sy) + 0.5); ctx.lineTo(RULER, Math.round(sy) + 0.5); ctx.stroke();
-      if (y < doc.height) ctx.fillText(String(y), RULER - 2, sy + (stepY * zoom) / 2);
-    }
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
 
     // Checkerboard.
     ctx.save();
@@ -435,9 +447,9 @@ export function CanvasViewport({ engine, apiRef }) {
         ctx.strokeStyle = ui.theme === 'light' ? 'rgba(30,34,48,0.10)' : 'rgba(255,255,255,0.055)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        const x0 = Math.max(0, Math.floor((RULER - docX) / zoom));
+        const x0 = Math.max(0, Math.floor((r - docX) / zoom));
         const x1 = Math.min(doc.width, Math.ceil((width - docX) / zoom));
-        const y0 = Math.max(0, Math.floor((RULER - docY) / zoom));
+        const y0 = Math.max(0, Math.floor((r - docY) / zoom));
         const y1 = Math.min(doc.height, Math.ceil((height - docY) / zoom));
         for (let x = x0; x <= x1; x++) { const sx = Math.round(docX + x * zoom) + 0.5; ctx.moveTo(sx, docY); ctx.lineTo(sx, docY + docH); }
         for (let y = y0; y <= y1; y++) { const sy = Math.round(docY + y * zoom) + 0.5; ctx.moveTo(docX, sy); ctx.lineTo(docX + docW, sy); }
@@ -471,10 +483,10 @@ export function CanvasViewport({ engine, apiRef }) {
         const pos = guidePosition(guide);
         if (axis === 'x') {
           const sx = Math.round(docX + pos * zoom) + 0.5;
-          ctx.beginPath(); ctx.moveTo(sx, RULER); ctx.lineTo(sx, height); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(sx, r); ctx.lineTo(sx, height); ctx.stroke();
         } else if (axis === 'y') {
           const sy = Math.round(docY + pos * zoom) + 0.5;
-          ctx.beginPath(); ctx.moveTo(RULER, sy); ctx.lineTo(width, sy); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(r, sy); ctx.lineTo(width, sy); ctx.stroke();
         }
       }
     }
@@ -511,10 +523,10 @@ export function CanvasViewport({ engine, apiRef }) {
       ctx.beginPath();
       if (g.axis === 'x') {
         const sx = Math.round(docX + g.position * zoom) + 0.5;
-        ctx.moveTo(sx, RULER); ctx.lineTo(sx, height);
+        ctx.moveTo(sx, r); ctx.lineTo(sx, height);
       } else {
         const sy = Math.round(docY + g.position * zoom) + 0.5;
-        ctx.moveTo(RULER, sy); ctx.lineTo(width, sy);
+        ctx.moveTo(r, sy); ctx.lineTo(width, sy);
       }
       ctx.stroke();
       ctx.restore();
@@ -645,15 +657,18 @@ export function CanvasViewport({ engine, apiRef }) {
 
     if (event.button !== 0 && event.button !== 2) return;
     const snapped = snap(screenToDoc(screenX, screenY));
-    if (screenX < RULER && screenY > RULER - 6) {
-      beginGuideDrag('x', point);
-      return;
+    const r = getRuler();
+    if (r > 0) {
+      if (screenX < r && screenY > r - 6) {
+        beginGuideDrag('x', point);
+        return;
+      }
+      if (screenY < r && screenX > r - 6) {
+        beginGuideDrag('y', point);
+        return;
+      }
+      if (screenX < r || screenY < r) return;
     }
-    if (screenY < RULER && screenX > RULER - 6) {
-      beginGuideDrag('y', point);
-      return;
-    }
-    if (screenX < RULER || screenY < RULER) return;
     engine.pointerDown({ x: snapped.x, y: snapped.y }, pointerEventLike(event, { button: event.button }));
   };
 

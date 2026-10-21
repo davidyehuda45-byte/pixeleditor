@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore, useI18n } from '../ui/hooks.jsx';
 import { Icon } from './Icon.jsx';
 import { Button, NumberInput, Segmented, Select, Slider, Toggle } from '../ui/controls.jsx';
@@ -32,6 +32,7 @@ export function ToolOptions({ engine }) {
   const store = useStore();
   const { t } = useI18n();
   const ui = store.ui;
+  const [mobileOptionsOpen, setMobileOptionsOpen] = useState(false);
   const tool = ui.tool;
   const set = (patch) => store.setUI(patch);
   const doc = store.doc;
@@ -407,18 +408,262 @@ export function ToolOptions({ engine }) {
   };
 
   return (
-    <div className="tool-options" aria-label={t('options.title')}>
-      <div className="current-tool">
-        <span className="current-tool-icon"><Icon name={TOOL_ICONS[tool] || 'pencil'} size={16} /></span>
-        <span>{t(`tool.${tool}`)}</span>
+    <>
+      {/* Desktop Tool Options */}
+      <div className="tool-options tool-options-desktop" aria-label={t('options.title')}>
+        <div className="current-tool">
+          <span className="current-tool-icon"><Icon name={TOOL_ICONS[tool] || 'pencil'} size={16} /></span>
+          <span>{t(`tool.${tool}`)}</span>
+        </div>
+        <div className="tool-options-scroll">{renderOptions()}</div>
+        <div className="tool-options-tail">
+          <button type="button" className={`mini-toggle ${ui.snapToGrid ? 'is-active' : ''}`} onClick={() => set({ snapToGrid: !ui.snapToGrid })} title={t('options.gridSnap')}>
+            <Icon name="grid" size={14} /><span>{t('options.snap')}</span>
+          </button>
+        </div>
       </div>
-      <div className="tool-options-scroll">{renderOptions()}</div>
-      <div className="tool-options-tail">
-        <button type="button" className={`mini-toggle ${ui.snapToGrid ? 'is-active' : ''}`} onClick={() => set({ snapToGrid: !ui.snapToGrid })} title={t('options.gridSnap')}>
-          <Icon name="grid" size={14} /><span>{t('options.snap')}</span>
+
+      {/* Mobile Streamlined Tool Bar */}
+      <div className="tool-options tool-options-mobile" aria-label={t('options.title')}>
+        <button
+          type="button"
+          className="mobile-tool-badge"
+          onClick={() => window.dispatchEvent(new CustomEvent('pixelforge:open-tools-drawer'))}
+          title="Ganti Alat"
+        >
+          <Icon name={TOOL_ICONS[tool] || 'pencil'} size={15} />
+          <span className="mobile-tool-badge-name">{t(`tool.${tool}`)}</span>
+          <span className="mobile-tool-badge-arrow">▾</span>
         </button>
+
+        <div className="mobile-primary-control">
+          {isBrush ? (
+            <div className="mobile-stepper">
+              <button
+                type="button"
+                className="mobile-stepper-btn minus"
+                onClick={() => set({ brushSize: Math.max(1, (ui.brushSize || 1) - 1) })}
+                aria-label="Kecilkan Kuas"
+              >
+                -
+              </button>
+              <span className="mobile-stepper-label">{ui.brushSize || 1} px</span>
+              <button
+                type="button"
+                className="mobile-stepper-btn plus"
+                onClick={() => set({ brushSize: Math.min(64, (ui.brushSize || 1) + 1) })}
+                aria-label="Besarkan Kuas"
+              >
+                +
+              </button>
+            </div>
+          ) : null}
+
+          {tool === 'fill' ? (
+            <div className="mobile-stepper">
+              <button
+                type="button"
+                className="mobile-stepper-btn minus"
+                onClick={() => set({ fillTolerance: Math.max(0, (ui.fillTolerance || 0) - 5) })}
+                aria-label="Kurangi Toleransi"
+              >
+                -
+              </button>
+              <span className="mobile-stepper-label">Tol {ui.fillTolerance || 0}</span>
+              <button
+                type="button"
+                className="mobile-stepper-btn plus"
+                onClick={() => set({ fillTolerance: Math.min(255, (ui.fillTolerance || 0) + 5) })}
+                aria-label="Tambah Toleransi"
+              >
+                +
+              </button>
+            </div>
+          ) : null}
+
+          {isShape ? (
+            <div className="mobile-stepper">
+              <button
+                type="button"
+                className="mobile-stepper-btn minus"
+                onClick={() => set({ shapeWidth: Math.max(1, (ui.shapeWidth || 1) - 1) })}
+              >
+                -
+              </button>
+              <span className="mobile-stepper-label">{ui.shapeWidth || 1} px</span>
+              <button
+                type="button"
+                className="mobile-stepper-btn plus"
+                onClick={() => set({ shapeWidth: Math.min(32, (ui.shapeWidth || 1) + 1) })}
+              >
+                +
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mobile-quick-toggles">
+          {isBrush ? (
+            <button
+              type="button"
+              className={`mobile-chip-btn ${ui.pixelPerfect ? 'is-active' : ''}`}
+              onClick={() => set({ pixelPerfect: !ui.pixelPerfect })}
+              title={t('options.pixelPerfect')}
+            >
+              Pixel-Perf
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            className={`mobile-chip-btn options-btn ${mobileOptionsOpen ? 'is-active' : ''}`}
+            onClick={() => setMobileOptionsOpen(true)}
+            title="Buka opsi alat lengkap"
+          >
+            <Icon name="settings" size={13} />
+            <span>Opsi</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Mobile Tool Options Bottom Sheet */}
+      {mobileOptionsOpen ? (
+        <>
+          <div
+            className="mobile-drawer-backdrop"
+            onClick={() => setMobileOptionsOpen(false)}
+            aria-hidden="true"
+          />
+          <div className="mobile-options-sheet" role="dialog" aria-modal="true" aria-label="Opsi Alat Lengkap">
+            <div className="mobile-sheet-pill" />
+            <div className="mobile-sheet-header">
+              <div className="mobile-sheet-title">
+                <Icon name={TOOL_ICONS[tool] || 'pencil'} size={16} />
+                <span>Opsi: {t(`tool.${tool}`)}</span>
+              </div>
+              <button
+                type="button"
+                className="btn-icon mobile-sheet-close"
+                onClick={() => setMobileOptionsOpen(false)}
+                aria-label="Tutup opsi"
+              >
+                <Icon name="close" size={16} />
+              </button>
+            </div>
+
+            <div className="mobile-sheet-content">
+              {isBrush ? (
+                <>
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.brushShape')}</span>
+                    <Segmented
+                      value={ui.brushShape}
+                      onChange={(value) => set({ brushShape: value })}
+                      options={[
+                        { value: 'round', label: t('options.round'), icon: 'circle' },
+                        { value: 'square', label: t('options.square'), icon: 'square' },
+                      ]}
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row column">
+                    <div className="mobile-sheet-row-header">
+                      <span className="mobile-sheet-label">{t('common.opacity')}</span>
+                      <span className="mobile-sheet-value">{Math.round(((ui.brushOpacity ?? 255) / 255) * 100)}%</span>
+                    </div>
+                    <Slider
+                      value={Math.round(((ui.brushOpacity ?? 255) / 255) * 100)}
+                      onChange={(value) => set({ brushOpacity: Math.round((value / 100) * 255) })}
+                      min={1}
+                      max={100}
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.dither')}</span>
+                    <Select
+                      value={ui.dither}
+                      onChange={(value) => set({ dither: value })}
+                      options={ditherOptions}
+                      className="select-compact"
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.symmetry')}</span>
+                    <Select
+                      value={ui.symmetry}
+                      onChange={(value) => set({ symmetry: value })}
+                      options={symmetryOptions}
+                      className="select-compact"
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.pressure')}</span>
+                    <Toggle
+                      checked={ui.pressureSize}
+                      onChange={(value) => set({ pressureSize: value })}
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.tiled')}</span>
+                    <Toggle
+                      checked={ui.tiled}
+                      onChange={(value) => set({ tiled: value })}
+                    />
+                  </div>
+
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.lockAlpha')}</span>
+                    <Toggle
+                      checked={ui.lockAlpha}
+                      onChange={(value) => set({ lockAlpha: value })}
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              {tool === 'fill' ? (
+                <>
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.contiguous')}</span>
+                    <Toggle
+                      checked={ui.fillContiguous}
+                      onChange={(value) => set({ fillContiguous: value })}
+                    />
+                  </div>
+                  <div className="mobile-sheet-row">
+                    <span className="mobile-sheet-label">{t('options.allLayers')}</span>
+                    <Toggle
+                      checked={ui.fillAllLayers}
+                      onChange={(value) => set({ fillAllLayers: value })}
+                    />
+                  </div>
+                </>
+              ) : null}
+
+              <div className="mobile-sheet-row">
+                <span className="mobile-sheet-label">{t('options.gridSnap')}</span>
+                <Toggle
+                  checked={ui.snapToGrid}
+                  onChange={(value) => set({ snapToGrid: value })}
+                />
+              </div>
+
+              <div className="mobile-sheet-row">
+                <span className="mobile-sheet-label">{t('menu.guides')}</span>
+                <Toggle
+                  checked={ui.showGuides}
+                  onChange={(value) => set({ showGuides: value })}
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
+    </>
   );
 }
 
