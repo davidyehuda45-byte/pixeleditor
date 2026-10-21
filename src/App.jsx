@@ -16,6 +16,7 @@ import { MobileDock } from './components/MobileDock.jsx';
 import { CommandPalette } from './components/CommandPalette.jsx';
 import { ToastHost, ConfirmHost } from './components/Overlays.jsx';
 import { DialogHost } from './components/Dialogs.jsx';
+import { ErrorBoundary } from './components/ErrorBoundary.jsx';
 import { autosaveSession } from './ui/actions.js';
 import { listAutosaves } from './io/autosave.js';
 import { importDropped } from './ui/actions.js';
@@ -409,7 +410,9 @@ function AppShell({ store, engine }) {
           aria-hidden="true"
         />
       ) : null}
-      <DialogHost />
+      <ErrorBoundary onReset={() => store.setDialog(null)}>
+        <DialogHost />
+      </ErrorBoundary>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} commands={commands} runCommand={runCommand} />
       <ToastHost />
       <ConfirmHost />
@@ -438,8 +441,10 @@ export default function App() {
   const [engine] = useState(() => new ToolEngine(store));
 
   return (
-    <StoreProvider store={store}>
+    <ErrorBoundary>
+      <StoreProvider store={store}>
       <AppShell store={store} engine={engine} />
-    </StoreProvider>
+      </StoreProvider>
+    </ErrorBoundary>
   );
 }

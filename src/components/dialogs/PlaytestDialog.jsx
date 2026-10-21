@@ -112,7 +112,8 @@ export function PlaytestDialog({ onClose }) {
       c.width = doc.width;
       c.height = doc.height;
       const ctx = c.getContext('2d');
-      const pixels = renderComposite(doc, frame.id);
+      const comp = renderComposite(doc, frame.id);
+      const pixels = comp?.data || comp;
       const imgData = new ImageData(pixels, doc.width, doc.height);
       ctx.putImageData(imgData, 0, 0);
       return { canvas: c, duration: frame.duration || 100 };

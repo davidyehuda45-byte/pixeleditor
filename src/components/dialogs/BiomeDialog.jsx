@@ -21,7 +21,8 @@ export function BiomeDialog({ onClose }) {
     const canvas = canvasRef.current;
     if (!canvas || !doc) return;
     const ctx = canvas.getContext('2d');
-    const source = renderComposite(doc, store.activeFrameId);
+    const comp = renderComposite(doc, store.activeFrameId);
+    const source = comp?.data || comp;
     const remapped = remapBiome(source, selectedPreset);
 
     canvas.width = doc.width;
